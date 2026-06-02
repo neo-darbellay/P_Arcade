@@ -3,6 +3,10 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/main/VisualStudio.gitignore
 
+# Binary files
+*.docx
+*.pdf
+
 # User-specific files
 *.rsuser
 *.suo
@@ -416,4 +420,4 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
-H-P_RemedAppro-NeoDarbellay-P_Arcade.docx
+
