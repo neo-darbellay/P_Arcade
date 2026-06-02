@@ -124,6 +124,10 @@ namespace P_Arcade
                     case 'n':
                     case 'N':
                         blnTwoPlayers = false;
+
+                        // Ensure player 1 will be the next player
+                        bytPlayer = 1;
+
                         blnVerification = true;
                         break;
                     default:
