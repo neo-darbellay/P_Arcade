@@ -16,22 +16,25 @@ namespace P_Arcade.Games
         /// </summary>
         public MineSweeper() : base("MineSweeper", false) { }
 
-        // Constants used for min/max of the board's size
+        // Constants used for min/max of the board's size and the difficulty (which is used to determine the number of mines)
         const byte VAL_MIN_LENGTH = 3;
         const byte VAL_MIN_WIDTH = 3;
+        const byte VAL_MIN_DIFFICULTY = 1;
         const byte VAL_MAX_LENGTH = 15;
+        const byte VAL_MAX_DIFFICULTY = 10;
         const byte VAL_MAX_WIDTH = 15;
 
         // Sprites used for the grid
         const char HIDDEN = '▓';
         const char MINE = '☼';
-        const char FLAG = '⚑';
+        const char FLAG = 'P';
 
         private static (byte row, byte col) currentTile;
 
-        // User input for length and width
+        // User input for length, width, and difficulty
         static byte bytLength = 0;
         static byte bytWidth = 0;
+        static byte bytDifficulty = 0;
 
         [DllImport("kernel32.dll")]
         public static extern IntPtr GetConsoleWindow();
@@ -129,7 +132,7 @@ namespace P_Arcade.Games
         }
 
         /// <summary>
-        /// Generate the grid
+        /// Generate the grid: place mines randomly, then compute adjacency counts for all other tiles.
         /// </summary>
         /// <returns></returns>
         private static (sbyte[,] grid, bool[,] revealed, bool[,] flagged) GenerateGrid()
@@ -140,18 +143,48 @@ namespace P_Arcade.Games
             bool[,] revealed = new bool[bytLength, bytWidth];
             bool[,] flagged = new bool[bytLength, bytWidth];
 
+            // The mine count is determined by the size of the grid and the difficulty, with a minimum of 1 mine
+            int intMineCount = Math.Max(1, (bytLength * bytWidth * bytDifficulty) / 30);
+
+            // Scatter mines
+            int intMinesPlaced = 0;
+            while (intMinesPlaced < intMineCount)
+            {
+                byte x = (byte)rnd.Next(0, bytLength);
+                byte y = (byte)rnd.Next(0, bytWidth);
+
+                if (grid[x, y] != 9)
+                {
+                    grid[x, y] = 9;
+                    intMinesPlaced++;
+                }
+            }
+
+            // Count adjacent mines for every non-mine tile
             for (byte x = 0; x < bytLength; x++)
             {
                 for (byte y = 0; y < bytWidth; y++)
                 {
-                    // Random value between 0 and 9
-                    grid[x, y] = (sbyte)rnd.Next(0, 10);
+                    if (grid[x, y] == 9)
+                        continue;
 
-                    // Randomly reveal some tiles for testing
-                    revealed[x, y] = rnd.Next(0, 2) == 1;
+                    sbyte sbyCount = 0;
 
-                    // Randomly place some flags for testing
-                    flagged[x, y] = rnd.Next(0, 10) == 0;
+                    for (int dx = -1; dx <= 1; dx++)
+                    {
+                        for (int dy = -1; dy <= 1; dy++)
+                        {
+                            if (dx == 0 && dy == 0) continue;
+
+                            int nx = x + dx;
+                            int ny = y + dy;
+
+                            if (nx >= 0 && nx < bytLength && ny >= 0 && ny < bytWidth && grid[nx, ny] == 9)
+                                sbyCount++;
+                        }
+                    }
+
+                    grid[x, y] = sbyCount;
                 }
             }
 
@@ -190,8 +223,8 @@ namespace P_Arcade.Games
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
         private static void DrawGrid(sbyte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged)
         {
-            byte bytHeight = (byte)bytGrid.GetLength(0);
-            byte bytWidth = (byte)bytGrid.GetLength(1);
+            byte bytHeight = (byte)bytGridValue.GetLength(0);
+            byte bytWidth = (byte)bytGridValue.GetLength(1);
 
             string[] tab_strInstructions = new string[]
             {
@@ -204,45 +237,49 @@ namespace P_Arcade.Games
 
             for (byte x = 0; x < bytHeight; x++)
             {
-                // top border
                 if (x == 0)
                 {
                     Console.Write("   ╔");
-
                     for (int y = 0; y < bytWidth; y++)
                         Console.Write("═════" + (y == bytWidth - 1 ? "╗\n" : "╦"));
                 }
 
                 // TOP INSIDE LINE
                 Console.Write("   ║");
-
                 for (byte y = 0; y < bytWidth; y++)
                 {
                     if (!blnRevealed[x, y] && !blnFlagged[x, y])
                         Console.Write("▓▓▓▓▓");
+                    else if (blnRevealed[x, y] && bytGridValue[x, y] == 9 && !blnFlagged[x, y])
+                    {
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        Console.Write("     ");
+                        Console.ResetColor();
+                    }
                     else
                         Console.Write("     ");
 
                     Console.Write("║");
                 }
-
                 Console.WriteLine();
 
                 // MIDDLE INSIDE LINE
                 Console.Write("   ║");
-
                 for (byte y = 0; y < bytWidth; y++)
                 {
-                    sbyte value = bytGrid[x, y];
-
-                    string symbol = GetTileSymbol(
-                        value,
-                        blnRevealed[x, y],
-                        blnFlagged[x, y]);
+                    sbyte value = bytGridValue[x, y];
+                    string symbol = GetTileSymbol(value, blnRevealed[x, y], blnFlagged[x, y]);
 
                     if (!blnRevealed[x, y] && !blnFlagged[x, y])
                     {
                         Console.Write("▓▓▓▓▓");
+                    }
+                    else if (blnRevealed[x, y] && value == 9  && !blnFlagged[x, y])
+                    {
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        Console.ForegroundColor = ConsoleColor.Black;
+                        Console.Write($"  {symbol}  ");
+                        Console.ResetColor();
                     }
                     else
                     {
@@ -250,29 +287,24 @@ namespace P_Arcade.Games
 
                         if (blnFlagged[x, y])
                             Console.ForegroundColor = ConsoleColor.Red;
-                        else if (value == 9)
-                            Console.ForegroundColor = ConsoleColor.Black;
                         else if (value > 0 && value < 9)
                         {
                             ConsoleColor[] colors =
                             {
-                                ConsoleColor.Blue,
-                                ConsoleColor.Green,
-                                ConsoleColor.Red,
-                                ConsoleColor.DarkBlue,
-                                ConsoleColor.DarkRed,
-                                ConsoleColor.DarkCyan,
-                                ConsoleColor.Black,
-                                ConsoleColor.Gray
-                            };
-
+                        ConsoleColor.Blue,
+                        ConsoleColor.Green,
+                        ConsoleColor.Red,
+                        ConsoleColor.DarkBlue,
+                        ConsoleColor.DarkRed,
+                        ConsoleColor.DarkCyan,
+                        ConsoleColor.DarkGray,
+                        ConsoleColor.Gray
+                    };
                             Console.ForegroundColor = colors[value - 1];
                         }
 
                         Console.Write(symbol);
-
                         Console.ResetColor();
-
                         Console.Write("  ");
                     }
 
@@ -286,42 +318,41 @@ namespace P_Arcade.Games
 
                 // BOTTOM INSIDE LINE
                 Console.Write("   ║");
-
                 for (byte y = 0; y < bytWidth; y++)
                 {
                     if (!blnRevealed[x, y] && !blnFlagged[x, y])
                         Console.Write("▓▓▓▓▓");
+                    else if (blnRevealed[x, y] && bytGridValue[x, y] == 9 && !blnFlagged[x, y])
+                    {
+                        Console.BackgroundColor = ConsoleColor.Red;
+                        Console.Write("     ");
+                        Console.ResetColor();
+                    }
                     else
                         Console.Write("     ");
 
                     Console.Write("║");
                 }
-
                 Console.WriteLine();
 
-                // separator
                 if (x < bytHeight - 1)
                 {
                     Console.Write("   ╠");
-
                     for (int y = 0; y < bytWidth; y++)
                         Console.Write("═════" + (y == bytWidth - 1 ? "╣\n" : "╬"));
                 }
                 else
                 {
                     Console.Write("   ╚");
-
                     for (int y = 0; y < bytWidth; y++)
                         Console.Write("═════" + (y == bytWidth - 1 ? "╝\n" : "╩"));
                 }
             }
 
-            // If grid is smaller than instruction count, print remaining instructions below
             for (int i = bytHeight; i < tab_strInstructions.Length; i++)
                 for (int y = 0; y < bytWidth; y++)
                     Console.Write((y == 0 ? "    " : "") + "   " + (y == bytWidth - 1 ? (" \t" + tab_strInstructions[i] + "\n") : " "));
         }
-
 
         /// <summary>
         /// Getting the user input
@@ -362,6 +393,23 @@ namespace P_Arcade.Games
 
             // Get the correct input
             InputService.GetInputInBoundaries(out bytWidth, VAL_MIN_WIDTH, VAL_MAX_WIDTH);
+
+
+            // Ask the user for the difficulty they want
+            Console.Write("\n   Please enter the difficulty you want.\n   The value needs to be greater than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(VAL_MIN_DIFFICULTY);
+            Console.ResetColor();
+
+            Console.Write(" and smaller than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(VAL_MAX_DIFFICULTY);
+            Console.ResetColor();
+
+            // Get the correct input
+            InputService.GetInputInBoundaries(out bytDifficulty, VAL_MIN_DIFFICULTY, VAL_MAX_DIFFICULTY);
         }
     }
 }
