@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+using P_Arcade.Games;
+using P_Arcade.Models;
 
 namespace P_Arcade
 {
@@ -23,7 +25,7 @@ namespace P_Arcade
 
         static List<Game> AvailableGames;
 
-        static void Main(string[] args)
+        static void Main()
         {
             AvailableGames = new List<Game>
             {
@@ -32,6 +34,7 @@ namespace P_Arcade
                 new SnakeGame(),
                 new TicTacToe(),
                 new SlidingPuzzle(),
+                new MineSweeper()
             };
 
             // Set up their scores and a GameNames table
@@ -163,9 +166,10 @@ namespace P_Arcade
         {
             int intIndex = 1;
 
-            List<string> lst_strOptions = new List<string>();
-
-            lst_strOptions.Add($"{intIndex++}. Start");
+            List<string> lst_strOptions = new List<string>
+            {
+                $"{intIndex++}. Start"
+            };
 
             if (game.SupportsHighscore)
                 lst_strOptions.Add($"{intIndex++}. Show high scores");

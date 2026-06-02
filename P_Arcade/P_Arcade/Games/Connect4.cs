@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
+using P_Arcade.Models;
 
-namespace P_Arcade
+namespace P_Arcade.Games
 {
     /// <summary>
     /// The classic Connect 4 game, ported to C# Console.

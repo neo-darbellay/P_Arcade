@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace P_Arcade
+namespace P_Arcade.Models
 {
     [Serializable()]
     public class HighScore

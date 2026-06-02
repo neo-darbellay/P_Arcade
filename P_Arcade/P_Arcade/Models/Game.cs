@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace P_Arcade
+namespace P_Arcade.Models
 {
     /// <summary>
     /// The base class for any game

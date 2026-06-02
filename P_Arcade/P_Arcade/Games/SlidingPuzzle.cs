@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Runtime.InteropServices;
+using P_Arcade.Models;
 
-namespace P_Arcade
+namespace P_Arcade.Games
 {
     internal class SlidingPuzzle : Game
     {

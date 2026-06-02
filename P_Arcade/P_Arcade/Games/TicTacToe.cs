@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Linq;
+using P_Arcade.Models;
 
-namespace P_Arcade
+namespace P_Arcade.Games
 {
     internal class TicTacToe : Game
     {
