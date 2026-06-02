@@ -1,5 +1,4 @@
 {
-  "repoUrl": "https://github.com/neo-darbellay/P_RemedAppro-P_Arcade",
   "projectName": "Gitjournal",
   "branch": "main",
   "me": "neo-darbellay",
@@ -85,6 +84,28 @@
       "duration": 38,
       "status": "Done",
       "author": "neo-darbellay"
+    },
+    {
+      "id": "b894fbca-6d6d-4ec0-b29b-37b5af14344e",
+      "type": "commitless",
+      "author": "neo-darbellay",
+      "date": "2026-06-02T08:25:00.000Z",
+      "name": "doc(CDC): Ajout de nouveau jeux dans le CDC",
+      "description": "J'ai ajouté le Yahtzee et le Démineur, si besoin de plus, j'en ajouterai dans le futur",
+      "duration": 5
+    },
+    {
+      "id": "41280a97-17e7-46fe-a96d-94c1080b8bd5",
+      "type": "commitpatch",
+      "sha": "0d224727d461090513da672111d00460f9cb1337",
+      "url": "https://github.com/neo-darbellay/P_Arcade/commit/0d224727d461090513da672111d00460f9cb1337",
+      "author": "neo-darbellay",
+      "patch": true,
+      "date": "2026-06-02T09:25:00.000Z",
+      "name": "feat(Games): Implementing MineSweeper",
+      "description": "",
+      "duration": 37,
+      "status": "Done"
     }
   ]
 }
