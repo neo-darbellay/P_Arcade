@@ -52,6 +52,7 @@
     <Compile Include="Arcade.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Games\TicTacToe.cs" />
+    <Compile Include="Services\InputService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
