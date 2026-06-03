@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
+
 using P_Arcade.Games;
 using P_Arcade.Models;
 
@@ -31,10 +32,11 @@ namespace P_Arcade
             {
                 // Initialize games
                 new Connect4(),
+                new MineSweeper(),
+                new SlidingPuzzle(),
                 new SnakeGame(),
                 new TicTacToe(),
-                new SlidingPuzzle(),
-                new MineSweeper()
+                new Yahtzee()
             };
 
             // Set up their scores and a GameNames table
@@ -60,7 +62,7 @@ namespace P_Arcade
                     Console.WriteLine("\n\n");
                     Environment.Exit(418);
                 }
-                else if (intUserChoice < GameNames.Count)
+                else if (intUserChoice < GameNames.Count && intUserChoice > 0)
                 {
                     ShowGameOptions(AvailableGames[intUserChoice - 1]);
                 }
