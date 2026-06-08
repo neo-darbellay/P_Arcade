@@ -137,7 +137,7 @@ namespace P_Arcade
 
             Console.WriteLine("   " + strSubTitle);
             for (int i = 0; i < lst_strChoices.Count; i++)
-                Console.WriteLine("      " + lst_strChoices[i]);
+                Console.WriteLine("      " + lst_strChoices[i].PadRight(64));
 
             do
             {
@@ -167,8 +167,17 @@ namespace P_Arcade
                         userChoice = lst_strChoices.Count;
                 }
                 else if (char.IsDigit(userKey.KeyChar))
-                    return userKey.KeyChar - '0';
+                {
+                    int intChoice = userKey.KeyChar - '0';
+
+                    if (intChoice >= 1 && intChoice <= lst_strChoices.Count)
+                    {
+                        return intChoice;
+                    }
+                }
+
             } while (userKey.Key != ConsoleKey.Enter && userKey.Key != ConsoleKey.Spacebar);
+
             return userChoice;
         }
 
@@ -211,8 +220,6 @@ namespace P_Arcade
             // We let the user choose what he wants
             do
             {
-                Console.Clear();
-
                 int intChoice = DisplaySelectMenu(game.Name, "Select an option:", lst_strOptions, 5);
 
                 // Start the game

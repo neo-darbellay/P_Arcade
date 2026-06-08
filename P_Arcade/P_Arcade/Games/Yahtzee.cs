@@ -279,7 +279,7 @@ namespace P_Arcade.Games
             Arcade.ShowTitle("Yahtzee");
             ShowGrid();
 
-            Console.WriteLine($"\n   Player {intPlayer + 1}'s turn — Round {intRound + 1}");
+            Console.WriteLine($"\n   Player {intPlayer + 1}'s turn - Round {intRound + 1}");
 
             // Fresh dice each turn
             for (int i = 0; i < 5; i++)
