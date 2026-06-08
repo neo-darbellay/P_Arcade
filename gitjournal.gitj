@@ -90,8 +90,8 @@
       "type": "commitless",
       "author": "neo-darbellay",
       "date": "2026-06-02T08:25:00.000Z",
-      "name": "doc(CDC): Ajout de nouveau jeux dans le CDC",
-      "description": "J'ai ajouté le Yahtzee et le Démineur, si besoin de plus, j'en ajouterai dans le futur",
+      "name": "doc(specs): Added 2 new games",
+      "description": "I added Minesweeper and Yahtzee to the specifications",
       "duration": 5
     },
     {
@@ -105,6 +105,41 @@
       "name": "feat(Games): Implementing MineSweeper",
       "description": "",
       "duration": 37,
+      "status": "Done"
+    },
+    {
+      "id": "0ad83b4c-8c84-4ddc-8d56-97c7aa675c94",
+      "type": "commitless",
+      "author": "neo-darbellay",
+      "date": "2026-06-08T07:08:00.000Z",
+      "name": "doc(specs): Added 3 games",
+      "description": "The games added to the specs are:\r\nSimon\r\nA game where you need to copy a drawing/shape\r\n2048",
+      "duration": 68
+    },
+    {
+      "id": "ed0d1f07-f144-4313-af48-324bd6db2314",
+      "type": "commitpatch",
+      "sha": "d4a1f94676eeb9afcf26292893c849dc113fc145",
+      "url": "https://github.com/neo-darbellay/P_Arcade/commit/d4a1f94676eeb9afcf26292893c849dc113fc145",
+      "author": "neo-darbellay",
+      "patch": true,
+      "date": "2026-06-02T08:33:00.000Z",
+      "name": "fix(Connect 4): Fixed a bot issue",
+      "description": "If you lost against the bot and tried again, you'd be player 2",
+      "duration": 8,
+      "status": "Done"
+    },
+    {
+      "id": "67374007-6ae8-47a1-a1ce-97bf29386f68",
+      "type": "commitpatch",
+      "sha": "75f1b2736ffd0c93494f3f39a9f7a31440619b82",
+      "url": "https://github.com/neo-darbellay/P_Arcade/commit/75f1b2736ffd0c93494f3f39a9f7a31440619b82",
+      "author": "neo-darbellay",
+      "patch": true,
+      "date": "2026-01-16T09:07:00.000Z",
+      "name": "doc(specifications): Created the specifications",
+      "description": "",
+      "duration": 35,
       "status": "Done"
     }
   ]
