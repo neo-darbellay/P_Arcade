@@ -130,18 +130,50 @@ namespace P_Arcade.Games
         static readonly Die[] tbl_Dice = new Die[5];
         static readonly Random random = new Random();
 
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr GetConsoleWindow();
+        public override string[] About()
+        {
+            string[] tab_strAbout = new string[]
+            {
+                "Yahtzee is a dice-based strategy game where players aim to score the highest total points",
+                "It is played over 13 rounds using five dice per player",
 
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+                "",
+
+                "Each turn allows up to three rolls to build the best possible combination",
+                "Players may choose which dice to keep and which to reroll between attempts",
+
+                "",
+
+                "After rolling, the player must assign their result to one unused scoring category",
+                "Each category can only be used once per player during the game",
+
+                "",
+
+                "Upper section categories score based on individual dice values (ones through sixes)",
+                "Bonus points are awarded if the upper section total reaches a required threshold",
+
+                "",
+
+                "Lower section categories include combinations such as three of a kind, full house, and straights",
+                "Each combination has specific scoring rules and conditions",
+
+                "",
+
+                "The game ends after all categories are filled",
+                "The player with the highest total score wins",
+
+                "",
+
+                "Use number input to hold dice during rolls (1 to keep, 0 to reroll)",
+                "Select a category number to assign your final roll score",
+                "Press Enter after input to confirm actions"
+            };
+
+            return tab_strAbout;
+        }
 
         public override void Start()
         {
-            // Full screen the app
-            IntPtr handle = GetConsoleWindow();
-            ShowWindow(handle, 3);
-
             GetUserInput();
 
             tbl_intScores = new int[TBL_CATEGORIES.Length, bytPlayers];
@@ -298,7 +330,7 @@ namespace P_Arcade.Games
         /// </summary>
         private static void ChooseCategory(int intPlayer)
         {
-            int intChosenCategory = -1;
+            int intChosenCategory;
 
             do
             {

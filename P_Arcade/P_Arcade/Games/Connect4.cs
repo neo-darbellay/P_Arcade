@@ -61,129 +61,28 @@ namespace P_Arcade.Games
         /// </summary>
         static byte bytCounter = 0;
 
-        /// <summary>
-        /// Getting the user input
-        /// </summary>
-        private void GetUserInput()
+        public override string[] About()
         {
-            Arcade.ShowTitle(Name);
-
-            // Ask the user for the number of rows they want
-            Console.Write("   Please enter the number of rows you want.\n   The value needs to be greater than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(VAL_MIN_ROWS);
-            Console.ResetColor();
-
-            Console.Write(" and smaller than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(VAL_MAX_ROWS);
-            Console.ResetColor();
-
-            // Get the correct input
-            InputService.GetInputInBoundaries(out bytRow, VAL_MIN_ROWS, VAL_MAX_ROWS);
-
-
-            // Ask the user for the number of columns they want
-            Console.Write("\n   Please enter the number of columns you want.\n   The value needs to be greater than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(VAL_MIN_COLUMNS);
-            Console.ResetColor();
-
-            Console.Write(" and smaller than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(VAL_MAX_COLUMNS);
-            Console.ResetColor();
-
-            // Get the correct input
-            InputService.GetInputInBoundaries(out bytColumn, VAL_MIN_COLUMNS, VAL_MAX_COLUMNS);
-
-
-            // Ask the user if they want to play with two players
-            bool blnVerification = false;
-
-            while (!blnVerification)
+            string[] tab_strAbout = new string[]
             {
-                Console.WriteLine("\n   Would you like to play with a second player? (Y / N)");
+                "Connect 4 is a game about connecting 4 pieces in a row",
+                "Players take turns dropping pieces into one of the columns",
+                "A line of 4 pieces can be horizontal, vertical, or diagonal",
+                "The first player to connect 4 pieces wins the game",
+                "If the board fills up and nobody connects 4, the game ends in a draw",
 
-                Console.Write("   Your input: ");
+                "",
 
-                char chrAnswer = 'X';
+                "This version of the game contains a Bot mode, which makes you go against a computer and try to win",
+                "Bot mode has 10 levels of difficulty, which you can choose from before starting the game. The higher the level, the smarter the bot will be",
+                "Player 1 is always red, and Player 2 is either yellow or cyan depending on whether or not it's a second player or a bot"
+            };
 
-                char.TryParse(Console.ReadLine(), out chrAnswer);
-
-
-                switch (char.ToUpper(chrAnswer))
-                {
-                    case 'y':
-                    case 'Y':
-                        blnTwoPlayers = true;
-                        blnVerification = true;
-                        break;
-
-                    case 'n':
-                    case 'N':
-                        blnTwoPlayers = false;
-
-                        // Ensure player 1 will be the next player
-                        bytPlayer = 1;
-
-                        blnVerification = true;
-                        break;
-                    default:
-                        Console.WriteLine("\n   Wrong character found. Please type Y for yes, or N for no.");
-                        break;
-                }
-
-                Arcade.Windows11TerminalFix();
-
-            }
-
-            // Ask the user for the level of difficulty if they want to play against a bot
-            if (!blnTwoPlayers)
-            {
-                Console.Write("\n   What level do you want the computer to be at?");
-
-                blnVerification = false;
-
-                while (!blnVerification)
-                {
-                    Console.WriteLine("\n   Please enter a number between 1 and 10, where 1 is the easiest level, and 10 is the hardest");
-
-                    Console.Write("   Your input : ");
-
-                    string strConsoleLine = Console.ReadLine();
-
-                    if (byte.TryParse(strConsoleLine, out bytBotSmartness))
-                    {
-                        if (Enumerable.Range(1, 10).Contains(bytBotSmartness))
-                        {
-                            blnVerification = true;
-                        }
-                    }
-
-                    Arcade.Windows11TerminalFix();
-                }
-            }
+            return tab_strAbout;
         }
-
-
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr GetConsoleWindow();
-
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         public override void Start()
         {
-            // Full screen the app
-            IntPtr handle = GetConsoleWindow();
-            ShowWindow(handle, 3);
-
-
             GetUserInput();
 
             // Clear the screen and add the title back
@@ -918,6 +817,112 @@ namespace P_Arcade.Games
             }
 
             return bestMove;
+        }
+
+        /// <summary>
+        /// Getting the user input
+        /// </summary>
+        private void GetUserInput()
+        {
+            Arcade.ShowTitle(Name);
+
+            // Ask the user for the number of rows they want
+            Console.Write("   Please enter the number of rows you want.\n   The value needs to be greater than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(VAL_MIN_ROWS);
+            Console.ResetColor();
+
+            Console.Write(" and smaller than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(VAL_MAX_ROWS);
+            Console.ResetColor();
+
+            // Get the correct input
+            InputService.GetInputInBoundaries(out bytRow, VAL_MIN_ROWS, VAL_MAX_ROWS);
+
+
+            // Ask the user for the number of columns they want
+            Console.Write("\n   Please enter the number of columns you want.\n   The value needs to be greater than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(VAL_MIN_COLUMNS);
+            Console.ResetColor();
+
+            Console.Write(" and smaller than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(VAL_MAX_COLUMNS);
+            Console.ResetColor();
+
+            // Get the correct input
+            InputService.GetInputInBoundaries(out bytColumn, VAL_MIN_COLUMNS, VAL_MAX_COLUMNS);
+
+
+            // Ask the user if they want to play with two players
+            bool blnVerification = false;
+
+            while (!blnVerification)
+            {
+                Console.WriteLine("\n   Would you like to play with a second player? (Y / N)");
+
+                Console.Write("   Your input: ");
+
+                char.TryParse(Console.ReadLine(), out char chrAnswer);
+
+                switch (char.ToUpper(chrAnswer))
+                {
+                    case 'y':
+                    case 'Y':
+                        blnTwoPlayers = true;
+                        blnVerification = true;
+                        break;
+
+                    case 'n':
+                    case 'N':
+                        blnTwoPlayers = false;
+
+                        // Ensure player 1 will be the next player
+                        bytPlayer = 1;
+
+                        blnVerification = true;
+                        break;
+                    default:
+                        Console.WriteLine("\n   Wrong character found. Please type Y for yes, or N for no.");
+                        break;
+                }
+
+                Arcade.Windows11TerminalFix();
+
+            }
+
+            // Ask the user for the level of difficulty if they want to play against a bot
+            if (!blnTwoPlayers)
+            {
+                Console.Write("\n   What level do you want the computer to be at?");
+
+                blnVerification = false;
+
+                while (!blnVerification)
+                {
+                    Console.WriteLine("\n   Please enter a number between 1 and 10, where 1 is the easiest level, and 10 is the hardest");
+
+                    Console.Write("   Your input : ");
+
+                    string strConsoleLine = Console.ReadLine();
+
+                    if (byte.TryParse(strConsoleLine, out bytBotSmartness))
+                    {
+                        if (Enumerable.Range(1, 10).Contains(bytBotSmartness))
+                        {
+                            blnVerification = true;
+                        }
+                    }
+
+                    Arcade.Windows11TerminalFix();
+                }
+            }
         }
     }
 }

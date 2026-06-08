@@ -25,18 +25,42 @@ namespace P_Arcade.Games
 
         private static (byte row, byte col) emptyTile;
 
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr GetConsoleWindow();
+        public override string[] About()
+        {
+            string[] tab_strAbout = new string[]
+            {
+                "Sliding Puzzle is a classic puzzle game where the goal is to arrange the numbered tiles in order",
+                "The puzzle starts in a shuffled state with one empty space on the board",
+                "Tiles can only be moved by sliding them into the empty space",
 
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+                "",
+
+                "Use the arrow keys or WASD to move the empty tile around the grid",
+                "Each valid move swaps the empty tile with an adjacent numbered tile",
+
+                "",
+
+                "The puzzle is solved when all numbers are arranged in ascending order from left to right and top to bottom",
+                "The empty space must end up in the bottom-right corner of the board",
+
+                "",
+
+                "Board sizes can be customized from 3x3 up to 15x15",
+                "Larger boards are more challenging and usually require many more moves to solve",
+                "The game keeps track of the number of moves you make",
+                "Try to solve the puzzle in as few moves as possible",
+
+                "",
+
+                "Every generated puzzle is guaranteed to be solvable",
+                "Press R or ESC at any time to leave the current puzzle"
+            };
+
+            return tab_strAbout;
+        }
 
         public override void Start()
         {
-            // Full screen the app
-            IntPtr handle = GetConsoleWindow();
-            ShowWindow(handle, 3);
-
             intMoves = 0;
 
             // Get user-related values

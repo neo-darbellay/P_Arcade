@@ -19,6 +19,43 @@ namespace P_Arcade.Games
 
         public TicTacToe() : base("Tic Tac Toe", false) { }
 
+        public override string[] About()
+        {
+            string[] tab_strAbout = new string[]
+            {
+                "Tic Tac Toe is a classic two-player strategy game played on a 3x3 grid",
+                "Players take turns placing X and O symbols on empty cells",
+
+                "",
+
+                "The goal is to be the first player to get three of your symbols in a row",
+                "A winning line can be horizontal, vertical, or diagonal",
+
+                "",
+
+                "The game alternates between Player 1 (X) and Player 2 (O)",
+                "Each turn allows the player to place one symbol on any empty tile",
+
+                "",
+
+                "A move is only valid if the selected cell is empty",
+                "Once placed, symbols cannot be moved or removed",
+
+                "",
+
+                "The game ends when a player wins or when the grid is completely filled",
+                "If no player achieves a winning line, the game ends in a draw",
+
+                "",
+
+                "Use arrow keys or WASD to move the cursor around the grid",
+                "Press Enter or Spacebar to place your symbol",
+                "Press ESC at any time to quit the game"
+            };
+
+            return tab_strAbout;
+        }
+
         public override void Start()
         {
             // Create the grid

@@ -55,5 +55,10 @@ namespace P_Arcade.Models
             Console.WriteLine("   Hello, World!");
             Console.ReadKey(true);
         }
+
+        /// <summary>
+        /// Shows the about information for the game, if there is any
+        /// </summary>
+        public virtual string[] About() => new string[0];
     }
 }

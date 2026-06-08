@@ -248,19 +248,48 @@ namespace P_Arcade.Games
         private static readonly ConsoleColor PrimaryBackgroundColor = ConsoleColor.Gray;
         private static readonly ConsoleColor SecondaryBackgroundColor = ConsoleColor.White;
 
+        public override string[] About()
+        {
+            string[] tab_strAbout = new string[]
+            {
+                "Snake is a classic arcade game where you control a growing snake on a grid",
+                "The goal is to eat apples to increase your score while avoiding collisions",
 
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr GetConsoleWindow();
+                "",
 
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+                "The snake moves continuously in the direction you choose using arrow keys or WASD",
+                "Each apple eaten increases the snake's length and score by one",
+
+                "",
+
+                "The game ends if the snake collides with itself",
+                "Depending on settings, hitting the border will either kill the snake or teleport it to the opposite side",
+
+                "",
+
+                "Apples are randomly placed on empty tiles of the grid",
+                "The snake cannot pass through itself, so movement requires careful planning",
+
+                "",
+
+                "Game speed can be adjusted before starting, affecting how quickly the snake moves",
+                "You can also customize the grid size and the number of apples on screen",
+
+                "",
+
+                "The game tracks your score based on how many apples you collect",
+                "Try to survive as long as possible and grow the longest snake you can",
+
+                "",
+
+                "Press Q or Escape at any time to quit the current run"
+            };
+
+            return tab_strAbout;
+        }
 
         public override void Start()
         {
-            // Full screen the app
-            IntPtr handle = GetConsoleWindow();
-            ShowWindow(handle, 3);
-
             CurrentScore = 0;
 
             // Get user-related values
@@ -514,12 +543,12 @@ namespace P_Arcade.Games
         /// <param name="blnErase">Whether or not it should draw or erase at the given position</param>
         public static void DrawTile(int left, int top, char chrSprite, ConsoleColor ccrSpriteColor, bool blnErase)
         {
-            (int X, int Y) intStart = (FIRST_TILE_X + left, FIRST_TILE_Y + top);
+            (int X, int Y) = (FIRST_TILE_X + left, FIRST_TILE_Y + top);
 
-            Console.BackgroundColor = ((intStart.X / 2) + (intStart.Y / 2)) % 2 != 0 ? PrimaryBackgroundColor : SecondaryBackgroundColor;
+            Console.BackgroundColor = ((X / 2) + (Y / 2)) % 2 != 0 ? PrimaryBackgroundColor : SecondaryBackgroundColor;
             Console.ForegroundColor = ccrSpriteColor;
 
-            Console.SetCursorPosition(intStart.X, intStart.Y);
+            Console.SetCursorPosition(X, Y);
             Console.Write(blnErase ? ' ' : chrSprite);
 
             Console.ResetColor();

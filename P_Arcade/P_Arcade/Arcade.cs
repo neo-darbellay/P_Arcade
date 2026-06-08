@@ -1,11 +1,11 @@
-﻿using System;
+﻿using P_Arcade.Games;
+using P_Arcade.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Xml.Serialization;
-
-using P_Arcade.Games;
-using P_Arcade.Models;
 
 namespace P_Arcade
 {
@@ -26,6 +26,13 @@ namespace P_Arcade
 
         static List<Game> AvailableGames;
 
+
+        [DllImport("kernel32.dll")]
+        public static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
         static void Main()
         {
             AvailableGames = new List<Game>
@@ -33,6 +40,7 @@ namespace P_Arcade
                 // Initialize games
                 new Connect4(),
                 new MineSweeper(),
+                new SimonGame(),
                 new SlidingPuzzle(),
                 new SnakeGame(),
                 new TicTacToe(),
@@ -75,6 +83,10 @@ namespace P_Arcade
         /// <param name="title">The current title</param>
         public static void ShowTitle(string title)
         {
+            // Full screen the app just in case it got resized
+            IntPtr handle = GetConsoleWindow();
+            ShowWindow(handle, 3);
+
             Console.Clear();
             Console.ResetColor();
 
@@ -161,7 +173,7 @@ namespace P_Arcade
         }
 
         /// <summary>
-        /// Displays the options (play, high scores, exit) of the current game
+        /// Displays the options (play, about, high scores and exit) of the current game
         /// </summary>
         /// <param name="game">The game to show the options in</param>
         static bool ShowGameOptions(Game game)
@@ -173,30 +185,62 @@ namespace P_Arcade
                 $"{intIndex++}. Start"
             };
 
-            if (game.SupportsHighscore)
-                lst_strOptions.Add($"{intIndex++}. Show high scores");
+            string[] tab_strAbout = game.About();
 
+            bool blnHasAbout = tab_strAbout.Any(strAbout => !string.IsNullOrWhiteSpace(strAbout));
+            bool blnHasHighscore = game.SupportsHighscore;
+
+            int intAboutOption = -1;
+            int intHighscoreOption = -1;
+
+            if (blnHasAbout)
+            {
+                intAboutOption = intIndex;
+                lst_strOptions.Add($"{intIndex++}. About");
+            }
+
+            if (blnHasHighscore)
+            {
+                intHighscoreOption = intIndex;
+                lst_strOptions.Add($"{intIndex++}. Show high scores");
+            }
+
+            int intBackOption = intIndex;
             lst_strOptions.Add($"{intIndex}. Back to the arcade");
 
-            //we let the user choose what he wants
+            // We let the user choose what he wants
             do
             {
                 Console.Clear();
-                switch (DisplaySelectMenu(game.Name, "Select an option:", lst_strOptions, 5))
+
+                int intChoice = DisplaySelectMenu(game.Name, "Select an option:", lst_strOptions, 5);
+
+                // Start the game
+                if (intChoice == 1)
                 {
-                    case 1:
-                        game.Start();
-                        break;
-                    case 2:
-                        // Only show high scores if the game supports them. Otherwise, quit the game
-                        if (game.SupportsHighscore)
-                        {
-                            DisplayHighestScores(game, 5);
-                            break;
-                        }
-                        else goto case 3;
-                    case 3:
-                        return true;
+                    game.Start();
+                }
+                // Show the about section only if the game has one
+                else if (intChoice == intAboutOption)
+                {
+                    Console.Clear();
+                    ShowTitle(game.Name.ToUpper());
+
+                    tab_strAbout.ToList().ForEach(strAbout => Console.WriteLine("   " + strAbout));
+
+                    Console.WriteLine("\n   -> Back");
+
+                    Console.ReadKey(true);
+                }
+                // Only show high scores if the game supports them
+                else if (intChoice == intHighscoreOption)
+                {
+                    DisplayHighestScores(game, 5);
+                }
+                // Quit the game and return to the arcade
+                else if (intChoice == intBackOption)
+                {
+                    return true;
                 }
             } while (true);
         }

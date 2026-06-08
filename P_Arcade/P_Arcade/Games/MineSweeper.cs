@@ -31,7 +31,7 @@ namespace P_Arcade.Games
         static bool blnWon;
         static bool blnGameOver;
 
-        static Stopwatch Timer = new Stopwatch();
+        static readonly Stopwatch Timer = new Stopwatch();
 
         // The currently selected tile
         private static (byte row, byte col) currentTile;
@@ -41,18 +41,41 @@ namespace P_Arcade.Games
         static byte bytWidth = 0;
         static byte bytDifficulty = 0;
 
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr GetConsoleWindow();
+        public override string[] About()
+        {
+            string[] tab_strAbout = new string[]
+            {
+                "MineSweeper is a puzzle game where the goal is to reveal every safe tile without triggering a mine",
+                "Each revealed number indicates how many mines are touching that tile, including diagonals",
+                "Use logic and deduction to determine which hidden tiles are safe and which contain mines",
 
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+                "",
+
+                "You can place flags on tiles that you believe contain mines to help keep track of dangerous locations",
+                "Revealing a mine immediately ends the game",
+                "Revealing a numbered tile for a second time attempts to reveal neighboring tiles when the required number of flags are present",
+                "Flags are not checked for correctness before this happens, so placing flags incorrectly can reveal a mine and end the game",
+
+                "",
+
+                "You win by revealing every safe tile or by correctly flagging all mines on the board",
+                "Board size can be customized between 6x6 and 15x15 before starting a game",
+                "Difficulty levels range from 1 to 10 and determine how many mines are placed on the board",
+
+                "",
+
+                "Use the arrow keys or WASD to move the cursor around the grid",
+                "Press R or Enter to reveal the selected tile",
+                "Press F or Spacebar to place or remove a flag on a hidden tile",
+                "The game records how long it takes you to clear the board",
+                "Careful planning and observation are the keys to achieving fast completion times"
+            };
+
+            return tab_strAbout;
+        }
 
         public override void Start()
         {
-            // Full screen the app
-            IntPtr handle = GetConsoleWindow();
-            ShowWindow(handle, 3);
-
             // Get user-related values
             GetUserInput();
 
