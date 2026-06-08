@@ -39,6 +39,7 @@ namespace P_Arcade
             {
                 // Initialize games
                 new Connect4(),
+                new CopyADrawing(),
                 new MineSweeper(),
                 new SimonGame(),
                 new SlidingPuzzle(),
