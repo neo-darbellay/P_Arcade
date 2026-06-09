@@ -64,6 +64,7 @@ namespace P_Arcade.Games
 
                 do
                 {
+                    // Reset cursor position so the grid is redrawn in-place
                     Console.SetCursorPosition(0, 5);
 
                     DrawGrid();
@@ -83,26 +84,38 @@ namespace P_Arcade.Games
                         ConsoleKey.D
                     };
 
+                    ConsoleKey[] tab_PlaceKeys =
+                    {
+                        ConsoleKey.Spacebar,
+                        ConsoleKey.Enter,
+                        ConsoleKey.Q,
+                        ConsoleKey.E
+                    };
+
                     if (tab_MovementKeys.Contains(movementKeyPressed))
                     {
                         MoveCursor(movementKeyPressed);
                     }
-                    else if (movementKeyPressed == ConsoleKey.Spacebar)
+                    else if (tab_PlaceKeys.Contains(movementKeyPressed))
                     {
                         ToggleCell();
                     }
                     else if (movementKeyPressed == ConsoleKey.R)
                     {
+                        // Flag restart and break out of gameplay loop immediately
                         blnRestart = true;
                         break;
                     }
                     else if (movementKeyPressed == ConsoleKey.Escape)
                     {
+                        // Exit the entire game loop
                         return;
                     }
 
+                    // Continue until player successfully matches the target drawing
                 } while (!DrawingsMatch());
 
+                // If the player requested a restart, skip success screen and reinitialize
                 if (blnRestart)
                     continue;
 
@@ -110,9 +123,7 @@ namespace P_Arcade.Games
                 DrawGrid();
 
                 Console.WriteLine("\n   You matched the drawings!");
-
                 Console.ReadKey(true);
-                blnRestart = true;
 
             } while (blnRestart);
         }
@@ -126,12 +137,17 @@ namespace P_Arcade.Games
 
             tab_blnCurrentDrawing = new bool[VAL_DRAWING_HEIGHT, VAL_DRAWING_WIDTH];
 
+            // Safety precaution to stop instant wins from ever happening
             do
             {
                 tab_blnGoalDrawing = GenerateRandomDrawing();
             }
             while (DrawingsMatch());
         }
+
+        /// <summary>
+        /// Toggle the currently selected cell
+        /// </summary>
         private static void ToggleCell()
         {
             int x = Cursor.X;
@@ -140,6 +156,16 @@ namespace P_Arcade.Games
             tab_blnCurrentDrawing[x, y] = !tab_blnCurrentDrawing[x, y];
         }
 
+        /// <summary>
+        /// Restricts an integer value to a specified inclusive range
+        /// If the value is below the minimum, returns the minimum
+        /// If above the maximum, returns the maximum
+        /// Otherwise, returns the original value
+        /// </summary>
+        /// <param name="value">The input value to clamp.</param>
+        /// <param name="min">The lower bound of the allowed range.</param>
+        /// <param name="max">The upper bound of the allowed range.</param>
+        /// <returns>The clamped value within min and max</returns>
         private static int Clamp(int value, int min, int max)
         {
             if (value < min)
@@ -185,7 +211,7 @@ namespace P_Arcade.Games
             Cursor = (x, y);
         }
         /// <summary>
-        /// Check if the drawings match
+        /// Check if both drawings match
         /// </summary>
         private static bool DrawingsMatch()
         {
@@ -203,70 +229,85 @@ namespace P_Arcade.Games
             return true;
         }
 
-        private static void DrawCell(bool blnFilled, int intRow, int intCol, bool blnSelected, bool blnCursorGrid)
+        /// <summary>
+        /// Renders a single cell in the drawing grid
+        /// </summary>
+        /// <param name="blnFilled">Whether or not the cell is full</param>
+        /// <param name="intRow">The row index</param>
+        /// <param name="intCol">The column index</param>
+        /// <param name="blnSelected">Whether or not the current cell has been selected</param>
+        /// <param name="blnPlayerGrid">Whether or not this is the board that the player uses</param>
+        private static void DrawCell(bool blnFilled, int intRow, int intCol, bool blnSelected, bool blnPlayerGrid)
         {
-            bool isCheckerDark = (intRow + intCol) % 2 == 0;
+            string strCellContent = "  ";
 
-            char chrToDraw;
+            ConsoleColor backgroundColor;
+            ConsoleColor foregroundColor = ConsoleColor.Black;
 
+            // Draw the cell either filled in or with a checker patern
             if (blnFilled)
-            {
-                chrToDraw = '█';
-            }
+                backgroundColor = ConsoleColor.White;
             else
+                backgroundColor = (intRow + intCol) % 2 == 0 ? ConsoleColor.Black : ConsoleColor.DarkGray;
+
+            // Render differently when the cursor is selecting something
+            if (blnSelected && blnPlayerGrid)
             {
-                chrToDraw = isCheckerDark ? '░' : '▒';
-            }
+                strCellContent = "[]";
 
-            ConsoleColor fg = ConsoleColor.Gray;
-            ConsoleColor bg = ConsoleColor.Black;
-
-            if (blnSelected && blnCursorGrid)
-            {
-                bg = ConsoleColor.DarkCyan;
-
+                // Highlight cursor differently depending on whether the cell is already filled
                 if (blnFilled)
-                {
-                    fg = ConsoleColor.White;
-                }
+                    backgroundColor = ConsoleColor.Cyan;
                 else
                 {
-                    fg = ConsoleColor.White;
-                    chrToDraw = isCheckerDark ? '▒' : '░';
+                    foregroundColor = ConsoleColor.White;
+                    backgroundColor = ConsoleColor.DarkCyan;
                 }
             }
 
-            Console.BackgroundColor = bg;
-            Console.ForegroundColor = fg;
+            Console.BackgroundColor = backgroundColor;
+            Console.ForegroundColor = foregroundColor;
 
-            Console.Write(chrToDraw);
+            Console.Write(strCellContent);
+
             Console.ResetColor();
         }
 
         /// <summary>
-        /// Draw both drawings and instructions
+        /// Draw both the player's current drawing and the target drawing side-by-side,
+        /// along with a small instruction panel on the right.
         /// </summary>
         private static void DrawGrid()
         {
-            string strHorizontal = new string('═', VAL_DRAWING_WIDTH / 2);
+            string strHorizontal = new string('═', VAL_DRAWING_WIDTH * 2);
 
             string[] tab_strInstructions =
             {
                 "Instructions:",
                 "Move with Arrow Keys or WASD",
-                "Press Space or Enter to fill in a tile",
+                "Press Space, Enter, Q or E to fill in a tile",
                 "Match the right drawing",
                 "Press R for a new drawing",
                 "Press ESC to quit"
             };
 
-            Console.WriteLine();
+            int intDrawingWidth = VAL_DRAWING_WIDTH * 2 + 2;
 
-            Console.WriteLine("  ╔" + strHorizontal + "╬" + strHorizontal + "╗ " + "╔" + strHorizontal + "╬" + strHorizontal + "╗");
+            string strLeftTitle = "YOUR DRAWING";
+            string strRightTitle = "TARGET";
+
+            // Centers each title within its respective drawing box width
+            string strLeftHeader = strLeftTitle.PadLeft((intDrawingWidth + strLeftTitle.Length) / 2).PadRight(intDrawingWidth);
+
+            string strRightHeader = strRightTitle.PadLeft((intDrawingWidth + strRightTitle.Length) / 2).PadRight(intDrawingWidth);
+
+            Console.WriteLine($"  {strLeftHeader} {strRightHeader}");
+            Console.WriteLine();
+            Console.WriteLine($"  ╔{strHorizontal}╗ ╔{strHorizontal}╗");
 
             for (byte bytRow = 0; bytRow < VAL_DRAWING_HEIGHT; bytRow++)
             {
-                Console.Write(bytRow == VAL_DRAWING_HEIGHT / 2 ? "  ╬" : "  ║");
+                Console.Write("  ║");
 
                 for (byte bytCol = 0; bytCol < VAL_DRAWING_WIDTH; bytCol++)
                 {
@@ -276,7 +317,7 @@ namespace P_Arcade.Games
                     DrawCell(blnPainted, bytRow, bytCol, blnSelected, true);
                 }
 
-                Console.Write(bytRow == VAL_DRAWING_HEIGHT / 2 ? "╬ ╬" : "║ ║");
+                Console.Write("║ ║");
 
                 for (byte bytCol = 0; bytCol < VAL_DRAWING_WIDTH; bytCol++)
                 {
@@ -285,15 +326,16 @@ namespace P_Arcade.Games
                     DrawCell(blnGoalFilled, bytRow, bytCol, false, false);
                 }
 
-                Console.Write(bytRow == VAL_DRAWING_HEIGHT / 2 ? "╬" : "║");
+                Console.Write("║");
 
+                // Aligns instruction lines with corresponding grid rows (if available)
                 if (bytRow < tab_strInstructions.Length)
                     Console.Write("\t" + tab_strInstructions[bytRow]);
 
                 Console.WriteLine();
             }
 
-            Console.WriteLine("  ╚" + strHorizontal + "╬" + strHorizontal + "╝ ╚" + strHorizontal + "╬" + strHorizontal + "╝");
+            Console.WriteLine($"  ╚{strHorizontal}╝ ╚{strHorizontal}╝");
         }
 
         /// <summary>
@@ -305,37 +347,64 @@ namespace P_Arcade.Games
 
             int intPoints = rnd.Next(3, 12);
 
-            (int X, int Y) posA = Origin;
+            (int X, int Y) posStart = Origin;
 
             for (int i = 0; i < intPoints; i++)
             {
-                (int X, int Y) posB = (rnd.Next(VAL_DRAWING_HEIGHT), rnd.Next(VAL_DRAWING_WIDTH));
+                (int X, int Y) posEnd = (rnd.Next(VAL_DRAWING_HEIGHT), rnd.Next(VAL_DRAWING_WIDTH));
 
-                DrawLine(tab_blnDrawing, posA, posB);
+                DrawLine(tab_blnDrawing, posStart, posEnd);
 
-                tab_blnDrawing[posB.X, posB.Y] = false;
+                // Clears the endpoint so it doesn't remain part of the final shape
+                tab_blnDrawing[posEnd.X, posEnd.Y] = false;
 
-                posA = posB;
+                posStart = posEnd;
             }
 
-            DrawLine(tab_blnDrawing, posA, Origin);
+            // Close the shape by connecting the last random point back to the origin
+            DrawLine(tab_blnDrawing, posStart, Origin);
 
             return tab_blnDrawing;
         }
 
         /// <summary>
-        /// Draw a line between two points
+        /// Draws a straight line between two points using Bresenham's algorithm.
+        /// This produces clean, uniform lines without diagonal bias.
         /// </summary>
-        private static void DrawLine(bool[,] tab_blnDrawing, (int X, int Y) posA, (int X, int Y) posB)
+        private static void DrawLine(bool[,] tab_blnDrawing, (int X, int Y) posStart, (int X, int Y) posEnd)
         {
-            while (posA != posB)
-            {
-                if (Math.Abs(posA.X - posB.X) > Math.Abs(posA.Y - posB.Y))
-                    posA.X = posA.X > posB.X ? posA.X - 1 : posA.X + 1;
-                else
-                    posA.Y = posA.Y > posB.Y ? posA.Y - 1 : posA.Y + 1;
+            int intDeltaX = Math.Abs(posEnd.X - posStart.X);
+            int intDeltaY = Math.Abs(posEnd.Y - posStart.Y);
 
-                tab_blnDrawing[posA.X, posA.Y] = !tab_blnDrawing[posA.X, posA.Y];
+            int intStepX = posStart.X < posEnd.X ? 1 : -1;
+            int intStepY = posStart.Y < posEnd.Y ? 1 : -1;
+
+            int intError = intDeltaX - intDeltaY;
+
+            while (true)
+            {
+                // Mark current pixel
+                tab_blnDrawing[posStart.X, posStart.Y] = true;
+
+                // Stop if we reached destination
+                if (posStart.X == posEnd.X && posStart.Y == posEnd.Y)
+                    break;
+
+                int intDoubleError = 2 * intError;
+
+                // Horizontal step
+                if (intDoubleError > -intDeltaY)
+                {
+                    intError -= intDeltaY;
+                    posStart.X += intStepX;
+                }
+
+                // Vertical step
+                if (intDoubleError < intDeltaX)
+                {
+                    intError += intDeltaX;
+                    posStart.Y += intStepY;
+                }
             }
         }
     }
