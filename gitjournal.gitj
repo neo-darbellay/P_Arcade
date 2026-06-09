@@ -141,6 +141,26 @@
       "description": "",
       "duration": 35,
       "status": "Done"
+    },
+    {
+      "id": "dcab10e4-e48d-48ce-b1fb-f51a29595d76",
+      "type": "commitless",
+      "name": "chore(PC): Set up the new Windows 11 PC",
+      "description": "We migrated from 10 to 11, and there were a lot of issues to fix before I could even think of starting my work again",
+      "date": "2026-06-09T06:30:00.000Z",
+      "duration": 30,
+      "status": "DONE",
+      "author": "neo-darbellay"
+    },
+    {
+      "id": "9db239e3-cfea-4cf2-b0da-6cf6810bd7ad",
+      "type": "commitless",
+      "name": "chore(Games): Tested every game to see if any of them were broken because of windows 11",
+      "description": "Broken games:\r\nMineSweeper (Revealing all mines looks wrong)\r\nSnake (The grid pattern is wrong)",
+      "date": "2026-06-09T07:03:00.000Z",
+      "duration": 33,
+      "status": "DONE",
+      "author": "neo-darbellay"
     }
   ]
 }
