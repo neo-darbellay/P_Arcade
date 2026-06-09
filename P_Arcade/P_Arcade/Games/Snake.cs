@@ -1,10 +1,12 @@
-﻿using P_Arcade.Models;
-using P_Arcade.Services;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using static P_Arcade.Services.ConsoleModifications;
+
+using P_Arcade.Models;
+using P_Arcade.Services;
 
 namespace P_Arcade.Games
 {
@@ -294,7 +296,7 @@ namespace P_Arcade.Games
             // Get user-related values
             GetUserInput();
 
-            AdjustZoomIfNeeded();
+            int intZoomed = AdjustZoomIfNeeded();
 
             // Clear the screen and add the title back
             Arcade.ShowTitle(Name);
@@ -437,12 +439,15 @@ namespace P_Arcade.Games
 
                 Arcade.SetHighScoresToFile(this);
             }
+
+            // Reset the zoom
+            Zoom(intZoomed);
         }
 
         /// <summary>
         /// Zoom out until the board will properly render
         /// </summary>
-        private static void AdjustZoomIfNeeded()
+        private static int AdjustZoomIfNeeded()
         {
             int requiredWidth = bytWidth + 10;
             int requiredHeight = bytLength + 10;
@@ -450,21 +455,23 @@ namespace P_Arcade.Games
             int windowWidth = Console.WindowWidth;
             int windowHeight = Console.WindowHeight;
 
-            int zoomAttempts = 0;
+            int intZoomed = 0;
 
-            while ((requiredWidth > windowWidth ||
-                    requiredHeight > windowHeight) &&
-                    zoomAttempts < 5)
+            while ((requiredWidth > windowWidth || requiredHeight > windowHeight))
             {
-                ConsoleModifications.Zoom(-1);
+                Zoom(-1);
+
+                // Increment a variable that will then be returned
+                intZoomed++;
 
                 Thread.Sleep(100);
 
                 windowWidth = Console.WindowWidth;
                 windowHeight = Console.WindowHeight;
 
-                zoomAttempts++;
             }
+
+            return intZoomed;
         }
 
         /// <summary>

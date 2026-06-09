@@ -1,11 +1,11 @@
-﻿using P_Arcade.Models;
-using P_Arcade.Services;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using static P_Arcade.Services.ConsoleModifications;
+
+using P_Arcade.Models;
+using P_Arcade.Services;
 
 namespace P_Arcade.Games
 {
@@ -80,7 +80,7 @@ namespace P_Arcade.Games
             // Get user-related values
             GetUserInput();
 
-            AdjustZoomIfNeeded();
+            int intZoomed = AdjustZoomIfNeeded();
 
             // Generate the grid
             byte[,] bytGridValues;
@@ -197,6 +197,9 @@ namespace P_Arcade.Games
                 Console.WriteLine($"\n   You solved a {bytLength} by {bytWidth} grid on difficulty {bytDifficulty} in {strTime}!\n   Press any key to continue");
                 Console.ReadKey(true);
             }
+
+            // Reset the zoom
+            Zoom(intZoomed);
         }
 
         /// <summary>
@@ -212,12 +215,17 @@ namespace P_Arcade.Games
             TimeSpan timeSpan = TimeSpan.FromMilliseconds(lngMiliseconds);
 
             // Build a readable string, skipping zero units
-            string strResult = string.Format("{0}{1}{2}{3}",
-                timeSpan.Days > 0 ? $"{timeSpan.Days} day " : "",
-                timeSpan.Hours > 0 ? $"{timeSpan.Hours} hour " : "",
-                timeSpan.Minutes > 0 ? $"{timeSpan.Minutes} minutes " : "",
-                timeSpan.Seconds > 0 ? $"{timeSpan.Seconds} seconds " : ""
+            string strResult = string.Format("{0}{1}{2}{3}{4}",
+                timeSpan.Days > 0 ? $"{timeSpan.Days} day, " : "",
+                timeSpan.Hours > 0 ? $"{timeSpan.Hours} hour, " : "",
+                timeSpan.Minutes > 0 ? $"{timeSpan.Minutes} minutes, " : "",
+                timeSpan.Seconds > 0 ? $"{timeSpan.Seconds} seconds, " : "",
+                timeSpan.Milliseconds > 0 ? $"{timeSpan.Milliseconds} miliseconds" : ""
             ).Trim();
+
+            // Remove any useless commas if there are any
+            if (strResult[strResult.Length - 1] == ',')
+                strResult = strResult.Remove(strResult.Length - 1);
 
             // If everything is zero, return "0ms"
             return string.IsNullOrEmpty(strResult) ? "0 second" : strResult;
@@ -260,6 +268,9 @@ namespace P_Arcade.Games
             if (blnFlagsCorrect)
             {
                 blnWon = true;
+
+                // Reveal all tiles if every flag is correct
+                RevealTiles(bytGridValue, blnRevealed, blnFlagged);
                 return;
             }
 
@@ -297,19 +308,38 @@ namespace P_Arcade.Games
             int bytNewRow = currentTile.row + bytRowOffset;
             int bytNewCol = currentTile.col + bytColOffset;
 
-            // Teleport across edges
-            if (bytNewRow < 0)
-                bytNewRow = bytGridValue.GetLength(0) - 1;
-            else if (bytNewRow >= bytGridValue.GetLength(0))
-                bytNewRow = 0;
+            // Only move if the cursor stays in the boundaries (no teleportation, as that can lead to a few situations where you reveal a mine even though you didn't mean to)
+            bool blnInRowBounds = (bytNewRow < bytGridValue.GetLength(0) && bytNewRow >= 0);
+            bool blnInColBounds = (bytNewCol < bytGridValue.GetLength(1) && bytNewCol >= 0);
 
-            if (bytNewCol < 0)
-                bytNewCol = bytGridValue.GetLength(1) - 1;
-            else if (bytNewCol >= bytGridValue.GetLength(1))
-                bytNewCol = 0;
-
-            currentTile = ((byte)bytNewRow, (byte)bytNewCol);
+            if (blnInRowBounds && blnInColBounds)
+                currentTile = ((byte)bytNewRow, (byte)bytNewCol);
         }
+
+        /// <summary>
+        /// Reveal every tile, triggers when the game ends
+        /// </summary>
+        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
+        /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
+        private static void RevealTiles(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged)
+        {
+            // Reveal all tiles
+            for (byte x = 0; x < bytGridValue.GetLength(0); x++)
+            {
+                for (byte y = 0; y < bytGridValue.GetLength(1); y++)
+                {
+                    byte bytValue = bytGridValue[x, y];
+
+                    if (bytValue != 9)
+                    {
+                        blnRevealed[x, y] = true;
+                        blnFlagged[x, y] = false;
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// Reveal every mine, triggers when the game ends
@@ -485,7 +515,7 @@ namespace P_Arcade.Games
         /// <summary>
         /// Zoom out until the board will properly render
         /// </summary>
-        private void AdjustZoomIfNeeded()
+        private int AdjustZoomIfNeeded()
         {
             int boardWidthChars = 4 + (bytWidth * 6);
             int boardHeightChars = (bytLength * 4) + 2;
@@ -493,17 +523,23 @@ namespace P_Arcade.Games
             int windowWidth = Console.WindowWidth;
             int windowHeight = Console.WindowHeight;
 
+            int intZoomed = 0;
+
             // Zoom out until it fits
-            while ((boardWidthChars > windowWidth - 5 ||
-                    boardHeightChars > windowHeight - 5))
+            while ((boardWidthChars > windowWidth - 5 || boardHeightChars > windowHeight - 5))
             {
                 Zoom(-1);
+
+                // Increment a variable that will then be returned
+                intZoomed++;
 
                 Thread.Sleep(100);
 
                 windowWidth = Console.WindowWidth;
                 windowHeight = Console.WindowHeight;
             }
+
+            return intZoomed;
         }
 
         /// <summary>
