@@ -33,6 +33,7 @@ namespace P_Arcade
             AvailableGames = new List<Game>
             {
                 // Initialize games
+                new TwoThousandFourtyEight(),
                 new Connect4(),
                 new CopyADrawing(),
                 new MineSweeper(),

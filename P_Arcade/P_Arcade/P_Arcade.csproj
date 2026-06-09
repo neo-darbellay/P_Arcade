@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Games\2048.cs" />
     <Compile Include="Games\CopyADrawing.cs" />
     <Compile Include="Games\Simon.cs" />
     <Compile Include="Games\Yahtzee.cs" />
