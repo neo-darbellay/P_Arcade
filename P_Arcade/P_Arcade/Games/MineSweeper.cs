@@ -1,10 +1,11 @@
-﻿using System;
+﻿using P_Arcade.Models;
+using P_Arcade.Services;
+using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Diagnostics;
-
-using P_Arcade.Models;
-using P_Arcade.Services;
+using System.Threading;
+using static P_Arcade.Services.ConsoleModifications;
 
 namespace P_Arcade.Games
 {
@@ -25,7 +26,7 @@ namespace P_Arcade.Games
 
         // Sprites used for the grid
         const char HIDDEN = '▓';
-        const char MINE = '☼';
+        const char MINE = '@';
         const char FLAG = 'P';
 
         static bool blnWon;
@@ -78,6 +79,8 @@ namespace P_Arcade.Games
         {
             // Get user-related values
             GetUserInput();
+
+            AdjustZoomIfNeeded();
 
             // Generate the grid
             byte[,] bytGridValues;
@@ -195,7 +198,7 @@ namespace P_Arcade.Games
                 Console.ReadKey(true);
             }
         }
-        
+
         /// <summary>
         /// Converts milliseconds into a readable duration string
         /// </summary>
@@ -476,6 +479,30 @@ namespace P_Arcade.Games
             else
             {
                 RevealArea(bytGridValue, blnRevealed, blnFlagged, bytRow, bytCol);
+            }
+        }
+
+        /// <summary>
+        /// Zoom out until the board will properly render
+        /// </summary>
+        private void AdjustZoomIfNeeded()
+        {
+            int boardWidthChars = 4 + (bytWidth * 6);
+            int boardHeightChars = (bytLength * 4) + 2;
+
+            int windowWidth = Console.WindowWidth;
+            int windowHeight = Console.WindowHeight;
+
+            // Zoom out until it fits
+            while ((boardWidthChars > windowWidth - 5 ||
+                    boardHeightChars > windowHeight - 5))
+            {
+                Zoom(-1);
+
+                Thread.Sleep(100);
+
+                windowWidth = Console.WindowWidth;
+                windowHeight = Console.WindowHeight;
             }
         }
 

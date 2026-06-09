@@ -136,7 +136,7 @@ namespace P_Arcade.Games
             MainLoop();
         }
 
-        private async void MainLoop()
+        private void MainLoop()
         {
             bool blnContinue = true;
 
@@ -149,7 +149,7 @@ namespace P_Arcade.Games
                 Thread.Sleep(600);
 
                 // Show the sequence
-                await PlaySequence();
+                PlaySequence();
 
                 // Discard any keys pressed during playback
                 while (Console.KeyAvailable)
@@ -308,7 +308,7 @@ namespace P_Arcade.Games
         /// <summary>
         /// Lights up each button in the current sequence in order, then returns
         /// </summary>
-        private async Task PlaySequence()
+        private void PlaySequence()
         {
             // Scale flash duration to game speed
             int intFlashMs = Math.Max(100, 550 - (_bytGameSpeed - 1) * 150);

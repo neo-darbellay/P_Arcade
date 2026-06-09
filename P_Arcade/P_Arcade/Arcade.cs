@@ -7,6 +7,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Xml.Serialization;
 
+using static P_Arcade.Services.ConsoleModifications;
+
 namespace P_Arcade
 {
     internal class Arcade
@@ -25,13 +27,6 @@ namespace P_Arcade
         ----------------------------------------------------------------------------*/
 
         static List<Game> AvailableGames;
-
-
-        [DllImport("kernel32.dll")]
-        public static extern IntPtr GetConsoleWindow();
-
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
         static void Main()
         {
@@ -68,13 +63,11 @@ namespace P_Arcade
 
                 if (intUserChoice == GameNames.Count)
                 {
-                    Console.WriteLine("\n\n");
+                    Console.SetCursorPosition(3, 5 + GameNames.Count + 3);
                     Environment.Exit(418);
                 }
                 else if (intUserChoice < GameNames.Count && intUserChoice > 0)
-                {
                     ShowGameOptions(AvailableGames[intUserChoice - 1]);
-                }
             } while (true);
         }
 
@@ -84,9 +77,8 @@ namespace P_Arcade
         /// <param name="title">The current title</param>
         public static void ShowTitle(string title)
         {
-            // Full screen the app just in case it got resized
-            IntPtr handle = GetConsoleWindow();
-            ShowWindow(handle, 3);
+            // Fullscreen the app
+            Fullscreen();
 
             Console.Clear();
             Console.ResetColor();
@@ -153,7 +145,9 @@ namespace P_Arcade
                 Console.SetCursorPosition(3, intTopLine + userChoice);
                 Console.Write("  ");
 
-                if (userKey.Key == ConsoleKey.DownArrow)
+                if (userKey.Key == ConsoleKey.Escape)
+                    return lst_strChoices.Count;
+                else if (userKey.Key == ConsoleKey.DownArrow)
                 {
                     userChoice++;
                     // If exceed the number of choices, reset to the min choice

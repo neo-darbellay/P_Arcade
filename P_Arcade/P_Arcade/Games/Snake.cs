@@ -1,11 +1,10 @@
-﻿using System;
+﻿using P_Arcade.Models;
+using P_Arcade.Services;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
-
-using P_Arcade.Models;
-using P_Arcade.Services;
+using System.Threading;
 
 namespace P_Arcade.Games
 {
@@ -295,6 +294,8 @@ namespace P_Arcade.Games
             // Get user-related values
             GetUserInput();
 
+            AdjustZoomIfNeeded();
+
             // Clear the screen and add the title back
             Arcade.ShowTitle(Name);
 
@@ -435,6 +436,34 @@ namespace P_Arcade.Games
                 HighScores.Add(new HighScore(CurrentScore, name));
 
                 Arcade.SetHighScoresToFile(this);
+            }
+        }
+
+        /// <summary>
+        /// Zoom out until the board will properly render
+        /// </summary>
+        private static void AdjustZoomIfNeeded()
+        {
+            int requiredWidth = bytWidth + 10;
+            int requiredHeight = bytLength + 10;
+
+            int windowWidth = Console.WindowWidth;
+            int windowHeight = Console.WindowHeight;
+
+            int zoomAttempts = 0;
+
+            while ((requiredWidth > windowWidth ||
+                    requiredHeight > windowHeight) &&
+                    zoomAttempts < 5)
+            {
+                ConsoleModifications.Zoom(-1);
+
+                Thread.Sleep(100);
+
+                windowWidth = Console.WindowWidth;
+                windowHeight = Console.WindowHeight;
+
+                zoomAttempts++;
             }
         }
 
