@@ -161,6 +161,26 @@
       "duration": 33,
       "status": "DONE",
       "author": "neo-darbellay"
+    },
+    {
+      "id": "654602bd-1f8d-4abb-87e4-119c4a924f9d",
+      "type": "commitless",
+      "name": "chore(P_Arcade): Final touches",
+      "description": "I got called along with other classmates to do something mid way through this",
+      "date": "2026-06-10T10:50:00.000Z",
+      "duration": 30,
+      "status": "WIP",
+      "author": "neo-darbellay"
+    },
+    {
+      "id": "20824249-d68f-4c1a-acd8-3bbede1a7e5d",
+      "type": "commitless",
+      "name": "chore(Others): Transported some material from 2 halls to a class",
+      "description": "A teacher gave us this task while we were working",
+      "date": "2026-06-10T11:00:00.000Z",
+      "duration": 10,
+      "status": "DONE",
+      "author": "neo-darbellay"
     }
   ]
 }
