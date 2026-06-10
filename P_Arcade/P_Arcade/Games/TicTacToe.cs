@@ -11,11 +11,11 @@ namespace P_Arcade.Games
         static bool blnCurrentPlayer = true;
 
         // The player's position
-        static sbyte bytRow = 0;
-        static sbyte bytCol = 0;
+        static byte bytRow = 0;
+        static byte bytCol = 0;
 
-        static sbyte bytPrevRow = 0;
-        static sbyte bytPrevCol = 0;
+        static byte bytPrevRow = 0;
+        static byte bytPrevCol = 0;
 
         public TicTacToe() : base("Tic Tac Toe", false) { }
 
@@ -59,7 +59,7 @@ namespace P_Arcade.Games
         public override void Start()
         {
             // Create the grid
-            byte[,] bytGrid = new byte[3, 3];
+            byte[,] tab_gridValues = new byte[3, 3];
 
             bool blnWon = false;
             bool blnFull = false;
@@ -72,20 +72,17 @@ namespace P_Arcade.Games
 
             // Clear the screen and add the title back
             Arcade.ShowTitle(Name);
-            DrawGrid(bytGrid);
+            DrawGrid(tab_gridValues);
 
             // Start the game up
             Console.CursorVisible = false;
             do
             {
-                MoveCursor(bytGrid);
+                MoveCursor(tab_gridValues);
 
                 ConsoleKey keyPressed = Console.ReadKey(true).Key;
 
-                ConsoleKey[] tab_MovementKeys =
-                {
-                    ConsoleKey.UpArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow, ConsoleKey.RightArrow, ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D
-                };
+                ConsoleKey[] tab_MovementKeys = { ConsoleKey.UpArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow, ConsoleKey.RightArrow, ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D };
 
                 // Check to see if the user pressed a valid key
                 if (tab_MovementKeys.Contains(keyPressed))
@@ -100,19 +97,18 @@ namespace P_Arcade.Games
                     }
                 }
                 else if (keyPressed == ConsoleKey.Enter || keyPressed == ConsoleKey.Spacebar)
-                {
                     // Start the next player's turn if the move is valid
-                    if (SendPiece(bytGrid))
+                    if (SendPiece(tab_gridValues))
                     {
                         blnCurrentPlayer = !blnCurrentPlayer;
                         DrawTurnText();
                     }
-                }
                 else if (keyPressed == ConsoleKey.Escape || keyPressed == ConsoleKey.R)
                     break;
 
-                (blnWon, bytWinner) = CheckWin(bytGrid);
-                blnFull = FullGrid(bytGrid);
+                (blnWon, bytWinner) = CheckWin(tab_gridValues);
+
+                blnFull = FullGrid(tab_gridValues);
             } while (!blnWon && !blnFull);
 
             // Place the cursor at the right spot
@@ -121,14 +117,14 @@ namespace P_Arcade.Games
             // If the user won, then show the victory message
             if (blnWon)
             {
-                Console.Write($"\n   Player {bytWinner} won! Press any key to restart.");
+                Console.Write($"\n   Player {bytWinner} won!");
                 Console.ReadKey(true);
             }
 
             // If the grid is full and the player hasn't won, show the draw message
             if (!blnWon && blnFull)
             {
-                Console.Write($"\n   It's a draw! Press any key to restart.");
+                Console.Write($"\n   It's a draw!");
                 Console.ReadKey(true);
             }
         }
@@ -136,7 +132,8 @@ namespace P_Arcade.Games
         /// <summary>
         /// Move the cursor to the correct position
         /// </summary>
-        private static void MoveCursor(byte[,] bytGrid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private static void MoveCursor(byte[,] tab_gridValues)
         {
             // Keep the cursor inside bounds (0–2)
             if (bytRow < 0) bytRow = 0;
@@ -147,7 +144,7 @@ namespace P_Arcade.Games
             byte bytPrevConsoleRow = (byte)(6 + (bytPrevRow * 2));
             byte bytPrevConsoleCol = (byte)(4 + (bytPrevCol * 4) + 1);
 
-            byte bytPrevCel = bytGrid[bytPrevRow, bytPrevCol];
+            byte bytPrevCel = tab_gridValues[bytPrevRow, bytPrevCol];
 
             Console.SetCursorPosition(bytPrevConsoleCol, bytPrevConsoleRow);
 
@@ -162,21 +159,22 @@ namespace P_Arcade.Games
                 Console.Write('O');
             }
             else
-            {
                 Console.Write(' ');
-            }
 
             Console.ResetColor();
 
             byte bytConsoleRow = (byte)(6 + (bytRow * 2));
             byte bytConsoleCol = (byte)(4 + (bytCol * 4) + 1);
 
-            byte bytCurrentCel = bytGrid[bytRow, bytCol];
+            byte bytCurrentCel = tab_gridValues[bytRow, bytCol];
 
             Console.SetCursorPosition(bytConsoleCol, bytConsoleRow);
+
             Console.BackgroundColor = ConsoleColor.White;
             Console.ForegroundColor = ConsoleColor.Black;
+
             Console.Write(bytCurrentCel == 0 ? ' ' : bytCurrentCel == 1 ? 'X' : 'O');
+
             Console.ResetColor();
 
             bytPrevRow = bytRow;
@@ -186,12 +184,12 @@ namespace P_Arcade.Games
         /// <summary>
         /// Put a piece down if nothing is there already
         /// </summary>
-        /// <param name="bytGrid"></param>
-        private static bool SendPiece(byte[,] bytGrid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private static bool SendPiece(byte[,] tab_gridValues)
         {
-            if (bytGrid[bytRow, bytCol] == 0)
+            if (tab_gridValues[bytRow, bytCol] == 0)
             {
-                bytGrid[bytRow, bytCol] = (byte)(blnCurrentPlayer ? 1 : 2);
+                tab_gridValues[bytRow, bytCol] = (byte)(blnCurrentPlayer ? 1 : 2);
 
                 byte consoleRow = (byte)(6 + (bytRow * 2));
                 byte consoleCol = (byte)(4 + (bytCol * 4) + 1);
@@ -224,67 +222,52 @@ namespace P_Arcade.Games
         /// <summary>
         /// Checks whether or not the current grid is full
         /// </summary>
-        /// <param name="bytGrid"></param>
-        private static bool FullGrid(byte[,] bytGrid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private static bool FullGrid(byte[,] tab_gridValues)
         {
-            for (byte x = 0; x < bytGrid.GetLength(0); x++)
-                for (byte y = 0; y < bytGrid.GetLength(1); y++)
-                    if (bytGrid[x, y] == 0)
+            for (byte x = 0; x < tab_gridValues.GetLength(0); x++)
+                for (byte y = 0; y < tab_gridValues.GetLength(1); y++)
+                    if (tab_gridValues[x, y] == 0)
                         return false;
+
             return true;
         }
 
         /// <summary>
         /// Check whether the user has won (if there is 3 of a character in a row)
         /// </summary>
-        /// <param name="bytGrid"></param>
-        private static (bool blnWon, byte bytWinner) CheckWin(byte[,] bytGrid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private static (bool blnWon, byte bytWinner) CheckWin(byte[,] tab_gridValues)
         {
             byte bytRepeated;
 
             // Check rows
             for (int row = 0; row < 3; row++)
             {
-                bytRepeated = bytGrid[row, 0];
+                bytRepeated = tab_gridValues[row, 0];
 
-                if (bytRepeated != 0 &&
-                    bytRepeated == bytGrid[row, 1] &&
-                    bytRepeated == bytGrid[row, 2])
-                {
+                if (bytRepeated != 0 && bytRepeated == tab_gridValues[row, 1] && bytRepeated == tab_gridValues[row, 2])
                     return (true, bytRepeated);
-                }
             }
 
             // Check columns
             for (int col = 0; col < 3; col++)
             {
-                bytRepeated = bytGrid[0, col];
+                bytRepeated = tab_gridValues[0, col];
 
-                if (bytRepeated != 0 &&
-                    bytRepeated == bytGrid[1, col] &&
-                    bytRepeated == bytGrid[2, col])
-                {
+                if (bytRepeated != 0 && bytRepeated == tab_gridValues[1, col] && bytRepeated == tab_gridValues[2, col])
                     return (true, bytRepeated);
-                }
             }
 
             // Check diagonal (top-left to bottom-right)
-            bytRepeated = bytGrid[0, 0];
-            if (bytRepeated != 0 &&
-                bytRepeated == bytGrid[1, 1] &&
-                bytRepeated == bytGrid[2, 2])
-            {
+            bytRepeated = tab_gridValues[0, 0];
+            if (bytRepeated != 0 && bytRepeated == tab_gridValues[1, 1] && bytRepeated == tab_gridValues[2, 2])
                 return (true, bytRepeated);
-            }
 
             // Check diagonal (top-right to bottom-left)
-            bytRepeated = bytGrid[0, 2];
-            if (bytRepeated != 0 &&
-                bytRepeated == bytGrid[1, 1] &&
-                bytRepeated == bytGrid[2, 0])
-            {
+            bytRepeated = tab_gridValues[0, 2];
+            if (bytRepeated != 0 && bytRepeated == tab_gridValues[1, 1] && bytRepeated == tab_gridValues[2, 0])
                 return (true, bytRepeated);
-            }
 
             return (false, 0);
         }
@@ -292,11 +275,11 @@ namespace P_Arcade.Games
         /// <summary>
         /// Draw the grid
         /// </summary>
-        /// <param name="bytGrid"></param>
-        private static void DrawGrid(byte[,] bytGrid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private static void DrawGrid(byte[,] tab_gridValues)
         {
-            byte bytHeight = (byte)bytGrid.GetLength(0);
-            byte bytWidth = (byte)bytGrid.GetLength(1);
+            byte bytHeight = (byte)tab_gridValues.GetLength(0);
+            byte bytWidth = (byte)tab_gridValues.GetLength(1);
 
             string[] tab_strInstructions = new string[]
             {
@@ -317,27 +300,19 @@ namespace P_Arcade.Games
                 Console.Write("   ║");
                 for (byte y = 0; y < bytWidth; y++)
                 {
-                    byte bytValue = bytGrid[x, y];
+                    byte bytValue = tab_gridValues[x, y];
 
                     if (bytValue == 0)
-                    {
                         Console.Write("   ║");
-                    }
                     else
-                    {
                         Console.Write(" " + (bytValue == 1 ? 'X' : 'O') + " ║");
-                    }
                 }
 
                 // Draw instruction if available
                 if (x < tab_strInstructions.Length)
-                {
                     Console.WriteLine("\t" + tab_strInstructions[x]);
-                }
                 else
-                {
                     Console.WriteLine();
-                }
 
                 // Draw separation line or bottom border
                 if (x < bytHeight - 1)

@@ -76,26 +76,9 @@ namespace P_Arcade.Games
 
                     ConsoleKey movementKeyPressed = Console.ReadKey(true).Key;
 
-                    ConsoleKey[] tab_MovementKeys =
-                    {
-                        ConsoleKey.UpArrow,
-                        ConsoleKey.DownArrow,
-                        ConsoleKey.LeftArrow,
-                        ConsoleKey.RightArrow,
+                    ConsoleKey[] tab_MovementKeys = { ConsoleKey.UpArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow, ConsoleKey.RightArrow, ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D };
 
-                        ConsoleKey.W,
-                        ConsoleKey.A,
-                        ConsoleKey.S,
-                        ConsoleKey.D
-                    };
-
-                    ConsoleKey[] tab_PlaceKeys =
-                    {
-                        ConsoleKey.Spacebar,
-                        ConsoleKey.Enter,
-                        ConsoleKey.Q,
-                        ConsoleKey.E
-                    };
+                    ConsoleKey[] tab_PlaceKeys = { ConsoleKey.Spacebar, ConsoleKey.Enter, ConsoleKey.Q, ConsoleKey.E };
 
                     if (tab_MovementKeys.Contains(movementKeyPressed))
                     {

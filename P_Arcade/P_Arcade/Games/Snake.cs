@@ -20,7 +20,7 @@ namespace P_Arcade.Games
         /// </summary>
         public (byte X, byte Y) Position { get; set; }
 
-        public SnakePart((byte X, byte Y) position) { Position = position; }
+        public SnakePart((byte X, byte Y) position) => Position = position;
     }
 
     /// <summary>
@@ -56,12 +56,17 @@ namespace P_Arcade.Games
         /// <summary>
         /// An array of snake parts, used as the snake's body
         /// </summary>
-        private readonly List<SnakePart> _body;
+        private readonly List<SnakePart> Body;
 
         /// <summary>
         /// The snake's head
         /// </summary>
-        private SnakePart Head => _body.First();
+        private SnakePart Head => Body.First();
+
+        /// <summary>
+        /// The snake's tail
+        /// </summary>
+        private SnakePart Tail => Body.Last();
 
         private readonly ConsoleColor PrimaryColor = ConsoleColor.DarkGreen;
         private readonly ConsoleColor SecondaryColor = ConsoleColor.Green;
@@ -69,9 +74,9 @@ namespace P_Arcade.Games
         public Snake((byte, byte) startingPoint)
         {
             HeadSymbol = '█';
-            BodySymbol = '█';
+            BodySymbol = '▓';
 
-            _body = new List<SnakePart> { new SnakePart(startingPoint), new SnakePart(startingPoint) };
+            Body = new List<SnakePart> { new SnakePart(startingPoint), new SnakePart(startingPoint) };
 
             ClearFromGrid();
             WriteToGrid();
@@ -83,9 +88,9 @@ namespace P_Arcade.Games
         /// </summary>
         private void ClearFromGrid()
         {
-            foreach (SnakePart part in _body)
+            foreach (SnakePart part in Body)
             {
-                SnakeGame.GameGrid[part.Position.Y, part.Position.X] = 0;
+                SnakeGame.tab_gridValues[part.Position.Y, part.Position.X] = 0;
             }
         }
 
@@ -95,12 +100,11 @@ namespace P_Arcade.Games
         private void WriteToGrid()
         {
             // Body
-            foreach (SnakePart part in _body.Skip(1))
-            {
-                SnakeGame.GameGrid[part.Position.Y, part.Position.X] = 2;
-            }
+            foreach (SnakePart part in Body.Skip(1))
+                SnakeGame.tab_gridValues[part.Position.Y, part.Position.X] = 2;
 
-            SnakeGame.GameGrid[Head.Position.Y, Head.Position.X] = 1;
+            // Head
+            SnakeGame.tab_gridValues[Head.Position.Y, Head.Position.X] = 1;
         }
 
         /// <summary>
@@ -108,7 +112,7 @@ namespace P_Arcade.Games
         /// </summary>
         public void Draw()
         {
-            foreach (SnakePart snakePart in _body)
+            foreach (SnakePart snakePart in Body)
             {
                 if (snakePart == Head)
                     continue;
@@ -123,6 +127,7 @@ namespace P_Arcade.Games
         /// Move the snake
         /// </summary>
         /// <param name="direction">Which direction to go in</param>
+        /// <param name="blnAteApple">Whether or not the snake ate an apple while moving</param>
         /// <returns>true if the movement worked, false if the movement failed, meaning the snake died</returns>
         public bool Move(Direction direction, out bool blnAteApple)
         {
@@ -139,61 +144,56 @@ namespace P_Arcade.Games
                 case Direction.Right: intNewX++; break;
             }
 
-            int intMaxGridX = SnakeGame.GameGrid.GetLength(1);
-            int intMaxGridY = SnakeGame.GameGrid.GetLength(0);
+            int intMaxGridX = SnakeGame.tab_gridValues.GetLength(1);
+            int intMaxGridY = SnakeGame.tab_gridValues.GetLength(0);
 
             // Check for border collisions
             bool blnBorderCollision = intNewX < 0 || intNewY < 0 || intNewX >= intMaxGridX || intNewY >= intMaxGridY;
 
             if (blnBorderCollision)
-            {
                 if (SnakeGame.blnBorderKills)
-                {
                     return false;
-                }
                 else
                 {
                     // Teleport the snake to the other side
-                    if (intNewX < 0) intNewX = (byte)(intMaxGridX - 1);
-                    else if (intNewX >= intMaxGridX) intNewX = 0;
+                    if (intNewX < 0)
+                        intNewX = (byte)(intMaxGridX - 1);
+                    else if (intNewX >= intMaxGridX)
+                        intNewX = 0;
 
-                    if (intNewY < 0) intNewY = (byte)(intMaxGridY - 1);
-                    else if (intNewY >= intMaxGridY) intNewY = 0;
+                    if (intNewY < 0)
+                        intNewY = (byte)(intMaxGridY - 1);
+                    else if (intNewY >= intMaxGridY)
+                        intNewY = 0;
                 }
-            }
 
             (byte X, byte Y) newPos = ((byte)intNewX, (byte)intNewY);
 
             // If there is a self collision with the first body part (other than the head), move using the previous position
-            if (_body.Count >= 2 && _body[1].Position == newPos)
+            if (Body.Count >= 2 && Body[1].Position == newPos)
                 return Move(previousDirection, out blnAteApple);
 
             // Check for self collisions
-            bool blnSelfCollision = _body.Any(p => p.Position.Equals(newPos));
+            bool blnSelfCollision = Body.Any(p => p.Position.Equals(newPos));
 
             if (blnSelfCollision)
-            {
                 return false;
-            }
 
-            blnAteApple = SnakeGame.GameGrid[newPos.Y, newPos.X] == 255;
+            blnAteApple = SnakeGame.tab_gridValues[newPos.Y, newPos.X] == 255;
 
             ClearFromGrid();
 
             // Insert new head
-            _body.Insert(0, new SnakePart(newPos));
+            Body.Insert(0, new SnakePart(newPos));
 
             if (!blnAteApple)
             {
                 // Remove tail ONLY if no apple was eaten
-                SnakePart tail = _body.Last();
-                SnakeGame.DrawTile(tail.Position.X, tail.Position.Y, BodySymbol, ConsoleColor.Black, true);
-                _body.RemoveAt(_body.Count - 1);
+                SnakeGame.DrawTile(Tail.Position.X, Tail.Position.Y, BodySymbol, ConsoleColor.Black, true);
+                Body.RemoveAt(Body.Count - 1);
             }
             else
-            {
                 SnakeGame.GenerateApple();
-            }
 
             WriteToGrid();
             Draw();
@@ -229,11 +229,11 @@ namespace P_Arcade.Games
         static byte bytWidth = 0;
 
         // The first tile's X and Y position
-        const byte FIRST_TILE_X = 4;
-        const byte FIRST_TILE_Y = 6;
+        const byte VAL_FIRST_TILE_X = 4;
+        const byte VAL_FIRST_TILE_Y = 6;
 
         // How many apples need to be on screen at once
-        public static byte TotalApples;
+        public static byte bytTotalApples;
 
         // Whether or not the borders kill you
         public static bool blnBorderKills;
@@ -242,7 +242,7 @@ namespace P_Arcade.Games
         public static byte bytGameSpeed;
 
         // The game's grid
-        public static byte[,] GameGrid;
+        public static byte[,] tab_gridValues;
 
         static readonly Random rng = new Random();
 
@@ -319,7 +319,6 @@ namespace P_Arcade.Games
                     {
                         if (y == 0)
                             Console.Write("   ╔");
-
                         else if (y == bytWidth + 1)
                             Console.Write("╗");
                         else
@@ -346,34 +345,35 @@ namespace P_Arcade.Games
                         else
                         {
                             Console.ResetColor();
-                            int gridX = x - 1; // subtract left border
-                            int gridY = y - 1; // subtract top border
 
-                            Console.BackgroundColor = ((gridX / 2) + (gridY / 2)) % 2 == 0 ? PrimaryBackgroundColor : SecondaryBackgroundColor;
+                            // Ignore left/right border for background color calculation
+                            int intGridX = x - 1;
+                            int intGridY = y - 1;
+
+                            Console.BackgroundColor = ((intGridX / 2) + (intGridY / 2)) % 2 == 0 ? PrimaryBackgroundColor : SecondaryBackgroundColor;
                             Console.Write(" ");
                         }
                     }
 
                     Console.ResetColor();
                 }
+
                 Console.WriteLine();
             }
 
             // Create the game grid
-            GameGrid = new byte[bytLength, bytWidth];
+            tab_gridValues = new byte[bytLength, bytWidth];
 
-            for (int i = 0; i < TotalApples; i++)
-            {
+            for (int i = 0; i < bytTotalApples; i++)
                 GenerateApple();
-            }
 
             // Create the player and put him in the middle
             Snake player = new Snake(((byte)(bytWidth / 2), (byte)(bytLength / 2)));
             player.Draw();
 
             // Create a stopwatch for time-based movement
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
+            Stopwatch timer = new Stopwatch();
+            timer.Start();
 
             // Handle player movement
             bool blnContinue = true;
@@ -419,11 +419,13 @@ namespace P_Arcade.Games
                 if (player.currentDirection == Snake.Direction.Up || player.currentDirection == Snake.Direction.Down)
                     bytAmountOfWait += bytAmountOfWait;
 
-                if (player.currentDirection.HasValue && stopwatch.ElapsedMilliseconds >= (bytAmountOfWait / bytGameSpeed))
+                if (player.currentDirection.HasValue && timer.ElapsedMilliseconds >= (bytAmountOfWait / bytGameSpeed))
                 {
                     blnContinue = player.Move(player.currentDirection.Value, out bool blnAteApple);
+
                     if (blnAteApple) CurrentScore++;
-                    stopwatch.Restart();
+
+                    timer.Restart();
                 }
             }
 
@@ -439,12 +441,12 @@ namespace P_Arcade.Games
                 Console.WriteLine($"   Final Score: {CurrentScore}");
                 Console.Write("\n   Enter your name: ");
 
-                string name = Console.ReadLine();
+                string strName = InputService.ReadLineOrEscape();
 
-                if (string.IsNullOrWhiteSpace(name))
-                    name = "Tmp";
+                if (string.IsNullOrWhiteSpace(strName))
+                    strName = "Tmp";
 
-                HighScores.Add(new HighScore(CurrentScore, name));
+                HighScores.Add(new HighScore(CurrentScore, strName));
 
                 Arcade.SetHighScoresToFile(this);
             }
@@ -455,15 +457,15 @@ namespace P_Arcade.Games
         /// </summary>
         private static int AdjustZoomIfNeeded()
         {
-            int requiredWidth = bytWidth + 10;
-            int requiredHeight = bytLength + 10;
+            int intRequiredWidth = bytWidth + 10;
+            int intRequiredHeight = bytLength + 10;
 
-            int windowWidth = Console.WindowWidth;
-            int windowHeight = Console.WindowHeight;
+            int intWindowWidth = Console.WindowWidth;
+            int intWindowHeight = Console.WindowHeight;
 
             int intZoomed = 0;
 
-            while ((requiredWidth > windowWidth || requiredHeight > windowHeight))
+            while ((intRequiredWidth > intWindowWidth || intRequiredHeight > intWindowHeight))
             {
                 Zoom(-1);
 
@@ -472,9 +474,8 @@ namespace P_Arcade.Games
 
                 Thread.Sleep(100);
 
-                windowWidth = Console.WindowWidth;
-                windowHeight = Console.WindowHeight;
-
+                intWindowWidth = Console.WindowWidth;
+                intWindowHeight = Console.WindowHeight;
             }
 
             return intZoomed;
@@ -483,14 +484,14 @@ namespace P_Arcade.Games
         /// <summary>
         /// Draws a sprite at the given x and y coordinate
         /// </summary>
-        /// <param name="left"></param>
-        /// <param name="top"></param>
+        /// <param name="intLeft">The sprite's left coordinate</param>
+        /// <param name="intTop">The sprite's right coordinate</param>
         /// <param name="chrSprite">The char to draw</param>
         /// <param name="ccrSpriteColor">The ConsoleColor of the sprite</param>
         /// <param name="blnErase">Whether or not it should draw or erase at the given position</param>
-        public static void DrawTile(int left, int top, char chrSprite, ConsoleColor ccrSpriteColor, bool blnErase)
+        public static void DrawTile(int intLeft, int intTop, char chrSprite, ConsoleColor ccrSpriteColor, bool blnErase)
         {
-            (int X, int Y) = (FIRST_TILE_X + left, FIRST_TILE_Y + top);
+            (int X, int Y) = (VAL_FIRST_TILE_X + intLeft, VAL_FIRST_TILE_Y + intTop);
 
             Console.BackgroundColor = ((X / 2) + (Y / 2)) % 2 != 0 ? PrimaryBackgroundColor : SecondaryBackgroundColor;
             Console.ForegroundColor = ccrSpriteColor;
@@ -504,36 +505,28 @@ namespace P_Arcade.Games
         /// <summary>
         /// Generates an apple at a random place on the map
         /// </summary>
-        public static bool GenerateApple()
+        public static void GenerateApple()
         {
             List<(int x, int y)> emptyCells = new List<(int x, int y)>();
 
             // Collect all the empty cells
             for (int y = 0; y < bytLength; y++)
-            {
                 for (int x = 0; x < bytWidth; x++)
-                {
-                    if (GameGrid[y, x] == 0)
-                    {
+                    if (tab_gridValues[y, x] == 0)
                         emptyCells.Add((x, y));
-                    }
-                }
-            }
 
             // If there are no empty cells, we can't place an apple
             if (emptyCells.Count == 0)
-                return false;
+                return;
 
             // Pick a random empty cell
             (int intAppleX, int intAppleY) = emptyCells[rng.Next(emptyCells.Count)];
 
             // Place the apple on the grid
-            GameGrid[intAppleY, intAppleX] = 255;
+            tab_gridValues[intAppleY, intAppleX] = 255;
 
             // Draw it
-            DrawTile(intAppleX, intAppleY, '█', ConsoleColor.DarkRed, false);
-
-            return true;
+            DrawTile(intAppleX, intAppleY, 'o', ConsoleColor.DarkRed, false);
         }
 
         /// <summary>
@@ -595,7 +588,7 @@ namespace P_Arcade.Games
             Console.ResetColor();
 
             // Get the correct input
-            blnExitRequested = !InputService.GetInputInBoundaries(out TotalApples, VAL_MIN_APPLES, VAL_MAX_APPLES);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytTotalApples, VAL_MIN_APPLES, VAL_MAX_APPLES);
 
             if (blnExitRequested)
                 return;

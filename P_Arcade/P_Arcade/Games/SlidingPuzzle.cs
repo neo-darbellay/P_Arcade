@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 using P_Arcade.Models;
 using P_Arcade.Services;
@@ -73,7 +72,7 @@ namespace P_Arcade.Games
             if (blnExitRequested) return;
 
             // Generate the grid
-            byte[,] bytGrid = CreateAndFillGrid();
+            byte[,] tab_gridValues = CreateAndFillGrid();
 
             bool blnWon = false;
 
@@ -85,15 +84,12 @@ namespace P_Arcade.Games
             do
             {
                 Console.SetCursorPosition(0, 5);
-                DrawGrid(bytGrid);
+                DrawGrid(tab_gridValues);
 
                 // Check to see if the user pressed a valid key
                 ConsoleKey keyPressed = Console.ReadKey(true).Key;
 
-                ConsoleKey[] tab_MovementKeys =
-                {
-                    ConsoleKey.UpArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow, ConsoleKey.RightArrow, ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D
-                };
+                ConsoleKey[] tab_MovementKeys = { ConsoleKey.UpArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow, ConsoleKey.RightArrow, ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D };
 
                 if (tab_MovementKeys.Contains(keyPressed))
                 {
@@ -110,14 +106,14 @@ namespace P_Arcade.Games
 
                     bool blnResult;
 
-                    blnResult = SwapTiles(bytGrid, bytRow, bytCol);
+                    blnResult = SwapTiles(tab_gridValues, bytRow, bytCol);
 
                     if (blnResult) intMoves++;
                 }
                 else if (keyPressed == ConsoleKey.Escape || keyPressed == ConsoleKey.R)
                     break;
 
-                blnWon = CheckWin(bytGrid);
+                blnWon = CheckWin(tab_gridValues);
             } while (!blnWon);
 
             // If the user won, then show the victory message
@@ -125,9 +121,9 @@ namespace P_Arcade.Games
             {
                 // Clear the screen and add the title back
                 Arcade.ShowTitle(Name);
-                DrawGrid(bytGrid);
+                DrawGrid(tab_gridValues);
 
-                Console.WriteLine($"\n   You won a {bytLength} by {bytWidth} grid in {intMoves} moves!\n   Press any key to continue");
+                Console.WriteLine($"\n   You won a {bytLength}x{bytWidth} grid in {intMoves} moves!");
                 Console.ReadKey(true);
             }
         }
@@ -135,15 +131,15 @@ namespace P_Arcade.Games
         /// <summary>
         /// Check whether the user has won (if the grid is organized)
         /// </summary>
-        /// <param name="bytGrid"></param>
-        private static bool CheckWin(byte[,] bytGrid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private static bool CheckWin(byte[,] tab_gridValues)
         {
             byte bytExpectedNumber = 1;
-            int total = bytGrid.Length;
+            int intTotal = tab_gridValues.Length;
 
-            foreach (byte bytCurrentNumber in bytGrid)
+            foreach (byte bytCurrentNumber in tab_gridValues)
             {
-                if (bytExpectedNumber < total && bytCurrentNumber != bytExpectedNumber)
+                if (bytExpectedNumber < intTotal && bytCurrentNumber != bytExpectedNumber)
                     return false;
 
                 bytExpectedNumber++;
@@ -155,12 +151,11 @@ namespace P_Arcade.Games
         /// <summary>
         /// Swap two tiles (with one being empty)
         /// </summary>
-        /// <param name="bytGrid"></param>
-        /// <param name="emptyTile"></param>
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
         /// <param name="bytRow">How much to swap (X)</param>
         /// <param name="bytCol">How much to swap (Y)</param>
         /// <returns>The empty tile's position</returns>
-        private static bool SwapTiles(byte[,] bytGrid, sbyte bytRow, sbyte bytCol)
+        private static bool SwapTiles(byte[,] tab_gridValues, sbyte bytRow, sbyte bytCol)
         {
             bool blnResult = false;
 
@@ -169,12 +164,11 @@ namespace P_Arcade.Games
             byte bytNewCol = (byte)(emptyTile.col + bytCol);
 
             // Check if the new position is within the grid boundaries
-            if (bytNewRow >= 0 && bytNewRow < bytWidth &&
-                bytNewCol >= 0 && bytNewCol < bytLength)
+            if (bytNewRow >= 0 && bytNewRow < bytWidth && bytNewCol >= 0 && bytNewCol < bytLength)
             {
                 // Swap the empty tile with the adjacent number
-                bytGrid[emptyTile.row, emptyTile.col] = bytGrid[bytNewRow, bytNewCol];
-                bytGrid[bytNewRow, bytNewCol] = 0;
+                tab_gridValues[emptyTile.row, emptyTile.col] = tab_gridValues[bytNewRow, bytNewCol];
+                tab_gridValues[bytNewRow, bytNewCol] = 0;
 
                 // Update the empty tile position
                 emptyTile = (bytNewRow, bytNewCol);
@@ -191,20 +185,20 @@ namespace P_Arcade.Games
         private static byte[,] CreateAndFillGrid()
         {
             // Initialize the grid with sequential numbers
-            byte[,] bytGrid = new byte[bytWidth, bytLength];
+            byte[,] tab_gridValues = new byte[bytWidth, bytLength];
             byte bytCounter = 1;
 
             for (byte row = 0; row < bytWidth; row++)
             {
                 for (byte col = 0; col < bytLength; col++)
                 {
-                    bytGrid[row, col] = bytCounter;
+                    tab_gridValues[row, col] = bytCounter;
                     bytCounter++;
                 }
             }
 
             // Set the last cell as empty
-            bytGrid[bytWidth - 1, bytLength - 1] = 0;
+            tab_gridValues[bytWidth - 1, bytLength - 1] = 0;
 
             // Initialize random number generator
             Random random = new Random();
@@ -226,20 +220,20 @@ namespace P_Arcade.Games
                     case 3: bytCol = 1; break;
                 }
 
-                _ = SwapTiles(bytGrid, bytRow, bytCol);
+                SwapTiles(tab_gridValues, bytRow, bytCol);
             }
 
-            return bytGrid;
+            return tab_gridValues;
         }
 
         /// <summary>
         /// Draw the grid
         /// </summary>
-        /// <param name="bytGrid"></param>
-        private static void DrawGrid(byte[,] bytGrid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private static void DrawGrid(byte[,] tab_gridValues)
         {
-            byte bytHeight = (byte)bytGrid.GetLength(0);
-            byte bytWidth = (byte)bytGrid.GetLength(1);
+            byte bytHeight = (byte)tab_gridValues.GetLength(0);
+            byte bytWidth = (byte)tab_gridValues.GetLength(1);
 
             string[] tab_strInstructions = new string[]
             {
@@ -261,7 +255,7 @@ namespace P_Arcade.Games
                 Console.Write("   ║");
                 for (byte y = 0; y < bytWidth; y++)
                 {
-                    byte bytValue = bytGrid[x, y];
+                    byte bytValue = tab_gridValues[x, y];
 
                     if (bytValue == 0)
                     {
@@ -287,13 +281,9 @@ namespace P_Arcade.Games
 
                 // Draw instruction if available
                 if (x < tab_strInstructions.Length)
-                {
                     Console.WriteLine("\t" + tab_strInstructions[x]);
-                }
                 else
-                {
                     Console.WriteLine();
-                }
 
                 // Draw separation line or bottom border
                 if (x < bytHeight - 1)
@@ -309,7 +299,6 @@ namespace P_Arcade.Games
                 for (int y = 0; y < bytWidth; y++)
                     Console.Write((y == 0 ? "    " : "") + "   " + (y == bytWidth - 1 ? (" \t" + tab_strInstructions[i] + "\n") : " "));
         }
-
 
         /// <summary>
         /// Getting the user input

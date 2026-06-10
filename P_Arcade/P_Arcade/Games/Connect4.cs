@@ -329,7 +329,7 @@ namespace P_Arcade.Games
                         case ConsoleKey.Backspace:
                         case ConsoleKey.Escape:
                             Console.SetCursorPosition(0, bytLastRow);
-                            Console.Write("\n\n\n\n   ");
+                            Console.Write("\n\n\n   ");
 
                             Console.ResetColor();
                             return;

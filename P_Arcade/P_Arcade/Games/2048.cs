@@ -1,4 +1,5 @@
 ﻿using P_Arcade.Models;
+using P_Arcade.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -84,17 +85,7 @@ namespace P_Arcade.Games
 
                 ConsoleKey keyPressed = Console.ReadKey(true).Key;
 
-                ConsoleKey[] tab_validPresses =
-                {
-                    ConsoleKey.W,
-                    ConsoleKey.UpArrow,
-                    ConsoleKey.A,
-                    ConsoleKey.LeftArrow,
-                    ConsoleKey.D,
-                    ConsoleKey.RightArrow,
-                    ConsoleKey.S,
-                    ConsoleKey.DownArrow
-                };
+                ConsoleKey[] tab_validPresses = { ConsoleKey.W, ConsoleKey.UpArrow, ConsoleKey.A, ConsoleKey.LeftArrow, ConsoleKey.D, ConsoleKey.RightArrow, ConsoleKey.S, ConsoleKey.DownArrow };
 
                 // Check that the key pressed is valid
                 if (keyPressed == ConsoleKey.Escape)
@@ -139,7 +130,7 @@ namespace P_Arcade.Games
                 Console.WriteLine($"   Final Score: {CurrentScore}");
                 Console.Write("\n   Enter your name: ");
 
-                string strName = Console.ReadLine();
+                string strName = InputService.ReadLineOrEscape();
 
                 if (string.IsNullOrWhiteSpace(strName))
                     strName = "Tmp";
@@ -281,23 +272,23 @@ namespace P_Arcade.Games
             int intCols = tab_gridValues.GetLength(1);
 
             // Check for empty cells
-            for (int r = 0; r < intRows; r++)
-                for (int c = 0; c < intCols; c++)
-                    if (tab_gridValues[r, c] == 0)
+            for (int intRow = 0; intRow < intRows; intRow++)
+                for (int intCol = 0; intCol < intCols; intCol++)
+                    if (tab_gridValues[intRow, intCol] == 0)
                         return false;
 
             // Check for mergeable neighbors
-            for (int r = 0; r < intRows; r++)
-                for (int c = 0; c < intCols; c++)
+            for (int intRow = 0; intRow < intRows; intRow++)
+                for (int intCol = 0; intCol < intCols; intCol++)
                 {
-                    int intValue = tab_gridValues[r, c];
+                    int intValue = tab_gridValues[intRow, intCol];
 
                     // Right neighbor
-                    if (c < intCols - 1 && tab_gridValues[r, c + 1] == intValue)
+                    if (intCol < intCols - 1 && tab_gridValues[intRow, intCol + 1] == intValue)
                         return false;
 
                     // Down neighbor
-                    if (r < intRows - 1 && tab_gridValues[r + 1, c] == intValue)
+                    if (intRow < intRows - 1 && tab_gridValues[intRow + 1, intCol] == intValue)
                         return false;
                 }
 

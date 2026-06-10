@@ -32,7 +32,7 @@ namespace P_Arcade.Games
         static bool blnWon;
         static bool blnGameOver;
 
-        static readonly Stopwatch Timer = new Stopwatch();
+        static readonly Stopwatch timer = new Stopwatch();
 
         // The currently selected tile
         private static (byte row, byte col) currentTile;
@@ -87,14 +87,14 @@ namespace P_Arcade.Games
 
             if (blnExitRequested) return;
 
-            int intZoomed = AdjustZoomIfNeeded();
+            byte bytZoomed = AdjustZoomIfNeeded();
 
             // Generate the grid
-            byte[,] bytGridValues;
+            byte[,] tab_gridValues;
             bool[,] blnRevealed;
             bool[,] blnFlagged;
 
-            (bytGridValues, blnRevealed, blnFlagged) = GenerateGrid();
+            (tab_gridValues, blnRevealed, blnFlagged) = GenerateGrid();
 
             blnWon = false;
             blnGameOver = false;
@@ -104,29 +104,20 @@ namespace P_Arcade.Games
 
             // Start the game up
             Console.CursorVisible = false;
-            Timer.Restart();
+            timer.Restart();
             do
             {
                 Console.SetCursorPosition(0, 5);
-                DrawGrid(bytGridValues, blnRevealed, blnFlagged);
+                DrawGrid(tab_gridValues, blnRevealed, blnFlagged);
 
                 // Check to see if the user pressed a valid key
                 ConsoleKey keyPressed = Console.ReadKey(true).Key;
 
-                ConsoleKey[] tab_MovementKeys =
-                {
-                    ConsoleKey.UpArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow, ConsoleKey.RightArrow, ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D
-                };
+                ConsoleKey[] tab_MovementKeys = { ConsoleKey.UpArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow, ConsoleKey.RightArrow, ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D };
 
-                ConsoleKey[] tab_RevealKeys =
-                {
-                    ConsoleKey.R, ConsoleKey.Enter
-                };
+                ConsoleKey[] tab_RevealKeys = { ConsoleKey.R, ConsoleKey.Enter };
 
-                ConsoleKey[] tab_FlagKeys =
-                {
-                    ConsoleKey.F, ConsoleKey.Spacebar
-                };
+                ConsoleKey[] tab_FlagKeys = { ConsoleKey.F, ConsoleKey.Spacebar };
 
                 if (tab_MovementKeys.Contains(keyPressed))
                 {
@@ -141,25 +132,25 @@ namespace P_Arcade.Games
                         case ConsoleKey.DownArrow: case ConsoleKey.S: bytRow = 1; break;
                     }
 
-                    MoveInGrid(bytGridValues, bytRow, bytCol);
+                    MoveInGrid(tab_gridValues, bytRow, bytCol);
                 }
                 else if (tab_RevealKeys.Contains(keyPressed) && !blnFlagged[currentTile.row, currentTile.col])
                     // Reveal the current tile
-                    RevealTile(bytGridValues, blnRevealed, blnFlagged, currentTile.row, currentTile.col);
+                    RevealTile(tab_gridValues, blnRevealed, blnFlagged, currentTile.row, currentTile.col);
                 else if (tab_FlagKeys.Contains(keyPressed) && !blnRevealed[currentTile.row, currentTile.col])
                 {
+                    // Only flag if there are revealed tiles around the current one
                     bool blnHasRevealedNeighbour = false;
-
-                    for (int dx = -1; dx <= 1 && !blnHasRevealedNeighbour; dx++)
-                        for (int dy = -1; dy <= 1 && !blnHasRevealedNeighbour; dy++)
+                    for (sbyte bytRowOffset = -1; bytRowOffset <= 1 && !blnHasRevealedNeighbour; bytRowOffset++)
+                        for (sbyte bytColOffset = -1; bytColOffset <= 1 && !blnHasRevealedNeighbour; bytColOffset++)
                         {
-                            if (dx == 0 && dy == 0)
+                            if (bytRowOffset == 0 && bytColOffset == 0)
                                 continue;
 
-                            int nx = currentTile.row + dx;
-                            int ny = currentTile.col + dy;
+                            byte bytNeighbourRow = (byte)(currentTile.row + bytRowOffset);
+                            byte bytNeighbourCol = (byte)(currentTile.col + bytColOffset);
 
-                            if (nx >= 0 && nx < blnRevealed.GetLength(0) && ny >= 0 && ny < blnRevealed.GetLength(1) && blnRevealed[nx, ny])
+                            if (bytNeighbourRow >= 0 && bytNeighbourRow < blnRevealed.GetLength(0) && bytNeighbourCol >= 0 && bytNeighbourCol < blnRevealed.GetLength(1) && blnRevealed[bytNeighbourRow, bytNeighbourCol])
                                 blnHasRevealedNeighbour = true;
                         }
 
@@ -169,17 +160,17 @@ namespace P_Arcade.Games
                 else if (keyPressed == ConsoleKey.Escape)
                     break;
 
-                CheckWin(bytGridValues, blnRevealed, blnFlagged);
+                CheckWin(tab_gridValues, blnRevealed, blnFlagged);
             } while (!blnWon && !blnGameOver);
 
-            Timer.Stop();
+            timer.Stop();
 
             // Display the corresponding win message
             if (blnGameOver)
             {
                 // Clear the screen and add the title back
                 Arcade.ShowTitle(Name);
-                DrawGrid(bytGridValues, blnRevealed, blnFlagged);
+                DrawGrid(tab_gridValues, blnRevealed, blnFlagged);
 
                 Console.WriteLine("\n   Game Over!");
                 Console.ReadKey(true);
@@ -188,19 +179,19 @@ namespace P_Arcade.Games
             {
                 // Clear the screen and add the title back
                 Arcade.ShowTitle(Name);
-                DrawGrid(bytGridValues, blnRevealed, blnFlagged);
+                DrawGrid(tab_gridValues, blnRevealed, blnFlagged);
 
                 // Format the time
-                long lngElapsedMiliseconds = Timer.ElapsedMilliseconds;
+                long lngElapsedMiliseconds = timer.ElapsedMilliseconds;
 
                 string strTime = FormatMilliseconds(lngElapsedMiliseconds);
 
-                Console.WriteLine($"\n   You solved a {bytLength} by {bytWidth} grid on difficulty {bytDifficulty} in {strTime}!\n   Press any key to continue");
+                Console.WriteLine($"\n   You solved a {bytLength} by {bytWidth} grid on difficulty {bytDifficulty} in {strTime}!");
                 Console.ReadKey(true);
             }
 
             // Reset the zoom
-            Zoom(intZoomed);
+            Zoom(bytZoomed);
         }
 
         /// <summary>
@@ -234,15 +225,15 @@ namespace P_Arcade.Games
         /// <summary>
         /// Check whether the user has won (all flags are placed properly, or all safe tiles are revealed)
         /// </summary>
-        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="tab_gridValues">The grid itself, containing every value</param>
         /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
-        private static void CheckWin(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged)
+        private static void CheckWin(byte[,] tab_gridValues, bool[,] blnRevealed, bool[,] blnFlagged)
         {
             blnWon = false;
 
-            byte bytRows = (byte)bytGridValue.GetLength(0);
-            byte bytCols = (byte)bytGridValue.GetLength(1);
+            byte bytRows = (byte)tab_gridValues.GetLength(0);
+            byte bytCols = (byte)tab_gridValues.GetLength(1);
 
             // Check if every mine is flagged and every flag is on a mine
             bool blnFlagsCorrect = true;
@@ -251,7 +242,7 @@ namespace P_Arcade.Games
             {
                 for (byte bytCol = 0; bytCol < bytCols; bytCol++)
                 {
-                    bool blnIsMine = bytGridValue[bytRow, bytCol] == 9;
+                    bool blnIsMine = tab_gridValues[bytRow, bytCol] == 9;
 
                     if (blnIsMine != blnFlagged[bytRow, bytCol])
                     {
@@ -269,7 +260,7 @@ namespace P_Arcade.Games
                 blnWon = true;
 
                 // Reveal all tiles if every flag is correct
-                RevealTiles(bytGridValue, blnRevealed, blnFlagged);
+                RevealTiles(tab_gridValues, blnRevealed, blnFlagged);
                 return;
             }
 
@@ -280,7 +271,7 @@ namespace P_Arcade.Games
             {
                 for (byte bytCol = 0; bytCol < bytCols; bytCol++)
                 {
-                    bool blnIsMine = bytGridValue[bytRow, bytCol] == 9;
+                    bool blnIsMine = tab_gridValues[bytRow, bytCol] == 9;
 
                     if (!blnIsMine && !blnRevealed[bytRow, bytCol])
                     {
@@ -299,69 +290,65 @@ namespace P_Arcade.Games
         /// <summary>
         /// Move the cursor around in the grid
         /// </summary>
-        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="tab_gridValues">The grid itself, containing every value</param>
         /// <param name="bytRowOffset">How much to move on the X axis</param>
         /// <param name="bytColOffset">How much to move on the Y axis</param>
-        private static void MoveInGrid(byte[,] bytGridValue, sbyte bytRowOffset, sbyte bytColOffset)
+        private static void MoveInGrid(byte[,] tab_gridValues, sbyte bytRowOffset, sbyte bytColOffset)
         {
-            int bytNewRow = currentTile.row + bytRowOffset;
-            int bytNewCol = currentTile.col + bytColOffset;
+            byte bytNewRow = (byte)(currentTile.row + bytRowOffset);
+            byte bytNewCol = (byte)(currentTile.col + bytColOffset);
 
             // Only move if the cursor stays in the boundaries (no teleportation, as that can lead to a few situations where you reveal a mine even though you didn't mean to)
-            bool blnInRowBounds = (bytNewRow < bytGridValue.GetLength(0) && bytNewRow >= 0);
-            bool blnInColBounds = (bytNewCol < bytGridValue.GetLength(1) && bytNewCol >= 0);
+            bool blnInRowBounds = (bytNewRow < tab_gridValues.GetLength(0) && bytNewRow >= 0);
+            bool blnInColBounds = (bytNewCol < tab_gridValues.GetLength(1) && bytNewCol >= 0);
 
             if (blnInRowBounds && blnInColBounds)
-                currentTile = ((byte)bytNewRow, (byte)bytNewCol);
+                currentTile = (bytNewRow, bytNewCol);
         }
 
         /// <summary>
         /// Reveal every tile, triggers when the game ends
         /// </summary>
-        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="tab_gridValues">The grid itself, containing every value</param>
         /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
-        private static void RevealTiles(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged)
+        private static void RevealTiles(byte[,] tab_gridValues, bool[,] blnRevealed, bool[,] blnFlagged)
         {
             // Reveal all tiles
-            for (byte x = 0; x < bytGridValue.GetLength(0); x++)
-            {
-                for (byte y = 0; y < bytGridValue.GetLength(1); y++)
+            for (byte bytRow = 0; bytRow < tab_gridValues.GetLength(0); bytRow++)
+                for (byte bytCol = 0; bytCol < tab_gridValues.GetLength(1); bytCol++)
                 {
-                    byte bytValue = bytGridValue[x, y];
+                    byte bytValue = tab_gridValues[bytRow, bytCol];
 
                     if (bytValue != 9)
                     {
-                        blnRevealed[x, y] = true;
-                        blnFlagged[x, y] = false;
+                        blnRevealed[bytRow, bytCol] = true;
+                        blnFlagged[bytRow, bytCol] = false;
                     }
                 }
-            }
         }
 
 
         /// <summary>
         /// Reveal every mine, triggers when the game ends
         /// </summary>
-        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="tab_gridValues">The grid itself, containing every value</param>
         /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
-        private static void RevealMines(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged)
+        private static void RevealMines(byte[,] tab_gridValues, bool[,] blnRevealed, bool[,] blnFlagged)
         {
             // Reveal all mines
-            for (byte x = 0; x < bytGridValue.GetLength(0); x++)
-            {
-                for (byte y = 0; y < bytGridValue.GetLength(1); y++)
+            for (byte bytRow = 0; bytRow < tab_gridValues.GetLength(0); bytRow++)
+                for (byte bytCol = 0; bytCol < tab_gridValues.GetLength(1); bytCol++)
                 {
-                    byte bytValue = bytGridValue[x, y];
+                    byte bytValue = tab_gridValues[bytRow, bytCol];
 
                     if (bytValue == 9)
                     {
-                        blnRevealed[x, y] = true;
-                        blnFlagged[x, y] = false;
+                        blnRevealed[bytRow, bytCol] = true;
+                        blnFlagged[bytRow, bytCol] = false;
                     }
                 }
-            }
 
             blnGameOver = true;
         }
@@ -369,15 +356,15 @@ namespace P_Arcade.Games
         /// <summary>
         /// Reveal the current tile, and if it's a zero, reveal the area around it as well
         /// </summary>
-        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="tab_gridValues">The grid itself, containing every value</param>
         /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
         /// <param name="bytRow">The X coordinate</param>
         /// <param name="bytCol">The Y coordinate</param>
-        private static void RevealArea(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged, byte bytRow, byte bytCol)
+        private static void RevealArea(byte[,] tab_gridValues, bool[,] blnRevealed, bool[,] blnFlagged, byte bytRow, byte bytCol)
         {
             // Out of bounds
-            if (bytRow >= bytGridValue.GetLength(0) || bytCol >= bytGridValue.GetLength(1))
+            if (bytRow >= tab_gridValues.GetLength(0) || bytCol >= tab_gridValues.GetLength(1))
                 return;
 
             // Already revealed or flagged
@@ -388,12 +375,11 @@ namespace P_Arcade.Games
             blnRevealed[bytRow, bytCol] = true;
 
             // Stop if this is a numbered tile
-            if (bytGridValue[bytRow, bytCol] != 0)
+            if (tab_gridValues[bytRow, bytCol] != 0)
                 return;
 
             // Reveal all neighbours
             for (sbyte bytRowOffset = -1; bytRowOffset <= 1; bytRowOffset++)
-            {
                 for (sbyte bytColOffset = -1; bytColOffset <= 1; bytColOffset++)
                 {
                     if (bytRowOffset == 0 && bytColOffset == 0)
@@ -402,33 +388,32 @@ namespace P_Arcade.Games
                     byte bytNeighbourRow = (byte)(bytRow + bytRowOffset);
                     byte bytNeighbourCol = (byte)(bytCol + bytColOffset);
 
-                    if (bytNeighbourRow < bytGridValue.GetLength(0) &&
-                        bytNeighbourCol < bytGridValue.GetLength(1))
+                    if (bytNeighbourRow < tab_gridValues.GetLength(0) &&
+                        bytNeighbourCol < tab_gridValues.GetLength(1))
                     {
-                        RevealArea(bytGridValue, blnRevealed, blnFlagged, bytNeighbourRow, bytNeighbourCol);
+                        RevealArea(tab_gridValues, blnRevealed, blnFlagged, bytNeighbourRow, bytNeighbourCol);
                     }
                 }
-            }
         }
 
         /// <summary>
         /// Reveal the given tile's neighbors if possible, even if one of them is a mine
         /// </summary>
-        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="tab_gridValues">The grid itself, containing every value</param>
         /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
         /// <param name="bytRow">The X coordinate</param>
         /// <param name="bytCol">The Y coordinate</param>
-        private static void RevealNeighbours(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged, byte bytRow,byte bytCol)
+        private static void RevealNeighbours(byte[,] tab_gridValues, bool[,] blnRevealed, bool[,] blnFlagged, byte bytRow,byte bytCol)
         {
             // Must already be revealed
             if (!blnRevealed[bytRow, bytCol])
             {
-                RevealArea(bytGridValue, blnRevealed, blnFlagged, bytRow, bytCol);
+                RevealArea(tab_gridValues, blnRevealed, blnFlagged, bytRow, bytCol);
                 return;
             }
 
-            byte bytValue = bytGridValue[bytRow, bytCol];
+            byte bytValue = tab_gridValues[bytRow, bytCol];
 
             // Don't chord zeroes or mines
             if (bytValue <= 0 || bytValue == 9)
@@ -438,7 +423,6 @@ namespace P_Arcade.Games
 
             // Count surrounding flags
             for (sbyte bytRowOffset = -1; bytRowOffset <= 1; bytRowOffset++)
-            {
                 for (sbyte bytColOffset = -1; bytColOffset <= 1; bytColOffset++)
                 {
                     if (bytRowOffset == 0 && bytColOffset == 0)
@@ -447,10 +431,9 @@ namespace P_Arcade.Games
                     byte bytNeighbourRow = (byte)(bytRow + bytRowOffset);
                     byte bytNeighbourCol = (byte)(bytCol + bytColOffset);
 
-                    if (bytNeighbourRow < bytGridValue.GetLength(0) && bytNeighbourCol < bytGridValue.GetLength(1) && blnFlagged[bytNeighbourRow, bytNeighbourCol])
+                    if (bytNeighbourRow < tab_gridValues.GetLength(0) && bytNeighbourCol < tab_gridValues.GetLength(1) && blnFlagged[bytNeighbourRow, bytNeighbourCol])
                         bytFlagCount++;
                 }
-            }
 
             // Not enough flags
             if (bytFlagCount < bytValue)
@@ -458,87 +441,70 @@ namespace P_Arcade.Games
 
             // Reveal all unflagged neighbours
             for (sbyte bytRowOffset = -1; bytRowOffset <= 1; bytRowOffset++)
-            {
                 for (sbyte bytColOffset = -1; bytColOffset <= 1; bytColOffset++)
                 {
                     if (bytRowOffset == 0 && bytColOffset == 0)
                         continue;
 
                     byte bytNeighborRow = (byte)(bytRow + bytRowOffset);
-                    int bytNeighborCol = (byte)(bytCol + bytColOffset);
+                    byte bytNeighborCol = (byte)(bytCol + bytColOffset);
 
-                    if (bytNeighborRow >= bytGridValue.GetLength(0) || bytNeighborCol >= bytGridValue.GetLength(1))
+                    if (bytNeighborRow >= tab_gridValues.GetLength(0) || bytNeighborCol >= tab_gridValues.GetLength(1))
                         continue;
 
                     if (blnFlagged[bytNeighborRow, bytNeighborCol])
                         continue;
 
-                    if (bytGridValue[bytNeighborRow, bytNeighborCol] == 9)
+                    if (tab_gridValues[bytNeighborRow, bytNeighborCol] == 9)
                     {
-                        RevealMines(bytGridValue, blnRevealed, blnFlagged);
+                        RevealMines(tab_gridValues, blnRevealed, blnFlagged);
                         return;
                     }
 
-                    RevealArea(bytGridValue, blnRevealed, blnFlagged, (byte)bytNeighborRow, (byte)bytNeighborCol);
+                    RevealArea(tab_gridValues, blnRevealed, blnFlagged, (byte)bytNeighborRow, (byte)bytNeighborCol);
                 }
-            }
         }
 
         /// <summary>
         /// Reveals a tile and its neighbors if that tile is a 0
         /// </summary>
-        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="tab_gridValues">The grid itself, containing every value</param>
         /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
         /// <param name="bytRow">The X coordinate</param>
         /// <param name="bytCol">The Y coordinate</param>
-        private static void RevealTile(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged, byte bytRow, byte bytCol)
+        private static void RevealTile(byte[,] tab_gridValues, bool[,] blnRevealed, bool[,] blnFlagged, byte bytRow, byte bytCol)
         {
             if (blnRevealed[bytRow, bytCol])
-            {
-                RevealNeighbours(bytGridValue, blnRevealed, blnFlagged, bytRow, bytCol);
-
-                return;
-            }
-
-            if (bytGridValue[bytRow, bytCol] == 9)
-            {
-                RevealMines(bytGridValue, blnRevealed, blnFlagged);
-            }
+                RevealNeighbours(tab_gridValues, blnRevealed, blnFlagged, bytRow, bytCol);
+            else if (tab_gridValues[bytRow, bytCol] == 9)
+                RevealMines(tab_gridValues, blnRevealed, blnFlagged);
             else
-            {
-                RevealArea(bytGridValue, blnRevealed, blnFlagged, bytRow, bytCol);
-            }
+                RevealArea(tab_gridValues, blnRevealed, blnFlagged, bytRow, bytCol);
         }
 
         /// <summary>
         /// Zoom out until the board will properly render
         /// </summary>
-        private int AdjustZoomIfNeeded()
+        private byte AdjustZoomIfNeeded()
         {
-            int boardWidthChars = 4 + (bytWidth * 6);
-            int boardHeightChars = (bytLength * 4) + 2;
+            int intBoardWidth = 4 + (bytWidth * 6);
+            int intBoardHeight = (bytLength * 4) + 2;
 
-            int windowWidth = Console.WindowWidth;
-            int windowHeight = Console.WindowHeight;
-
-            int intZoomed = 0;
+            byte bytZoomed = 0;
 
             // Zoom out until it fits
-            while ((boardWidthChars > windowWidth - 5 || boardHeightChars > windowHeight - 5))
+            while (intBoardWidth > Console.WindowWidth - 5 || intBoardHeight > Console.WindowHeight - 5)
             {
                 Zoom(-1);
 
                 // Increment a variable that will then be returned
-                intZoomed++;
+                bytZoomed++;
 
                 Thread.Sleep(100);
-
-                windowWidth = Console.WindowWidth;
-                windowHeight = Console.WindowHeight;
             }
 
-            return intZoomed;
+            return bytZoomed;
         }
 
         /// <summary>
@@ -571,7 +537,6 @@ namespace P_Arcade.Games
 
             // Count adjacent mines for every non-mine tile
             for (byte x = 0; x < bytLength; x++)
-            {
                 for (byte y = 0; y < bytWidth; y++)
                 {
                     if (bytGrid[x, y] == 9)
@@ -579,31 +544,26 @@ namespace P_Arcade.Games
 
                     byte bytCount = 0;
 
-                    for (int dx = -1; dx <= 1; dx++)
-                    {
-                        for (int dy = -1; dy <= 1; dy++)
+                    for (sbyte bytRowOffset = -1; bytRowOffset <= 1; bytRowOffset++)
+                        for (sbyte bytColOffset = -1; bytColOffset <= 1; bytColOffset++)
                         {
-                            if (dx == 0 && dy == 0) continue;
+                            if (bytRowOffset == 0 && bytColOffset == 0) continue;
 
-                            int nx = x + dx;
-                            int ny = y + dy;
+                            byte bytNeighbourRow = (byte)(x + bytRowOffset);
+                            byte bytNeighbourCol = (byte)(y + bytColOffset);
 
-                            if (nx >= 0 && nx < bytLength && ny >= 0 && ny < bytWidth && bytGrid[nx, ny] == 9)
+                            if (bytNeighbourRow >= 0 && bytNeighbourRow < bytLength && bytNeighbourCol >= 0 && bytNeighbourCol < bytWidth && bytGrid[bytNeighbourRow, bytNeighbourCol] == 9)
                                 bytCount++;
                         }
-                    }
 
                     bytGrid[x, y] = bytCount;
                 }
-            }
 
             // Reveal a safe area at the start of the game
             bool blnFound = false;
 
             for (byte x = 0; x < bytLength && !blnFound; x++)
-            {
                 for (byte y = 0; y < bytWidth && !blnFound; y++)
-                {
                     if (bytGrid[x, y] == 0)
                     {
                         RevealArea(bytGrid, blnRevealed, blnFlagged, x, y);
@@ -613,8 +573,6 @@ namespace P_Arcade.Games
                         
                         blnFound = true;
                     }
-                }
-            }
 
             return (bytGrid, blnRevealed, blnFlagged);
         }
@@ -645,13 +603,13 @@ namespace P_Arcade.Games
         /// <summary>
         /// Draw the minesweeper grid to the console, using the values in the grid and whether each tile is revealed or flagged to determine what to display for each tile
         /// </summary>
-        /// <param name="bytGridValue">The grid itself, containing every value</param>
+        /// <param name="tab_gridValues">The grid itself, containing every value</param>
         /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
-        private static void DrawGrid(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged)
+        private static void DrawGrid(byte[,] tab_gridValues, bool[,] blnRevealed, bool[,] blnFlagged)
         {
-            byte bytHeight = (byte)bytGridValue.GetLength(0);
-            byte bytWidth = (byte)bytGridValue.GetLength(1);
+            byte bytHeight = (byte)tab_gridValues.GetLength(0);
+            byte bytWidth = (byte)tab_gridValues.GetLength(1);
 
             string[] tab_strInstructions = new string[]
             {
@@ -688,7 +646,7 @@ namespace P_Arcade.Games
                         }
                         else
                             Console.Write("▓▓▓▓▓");
-                    else if (blnRevealed[x, y] && bytGridValue[x, y] == 9 && !blnFlagged[x, y])
+                    else if (blnRevealed[x, y] && tab_gridValues[x, y] == 9 && !blnFlagged[x, y])
                     {
                         Console.BackgroundColor = ConsoleColor.Red;
 
@@ -721,7 +679,7 @@ namespace P_Arcade.Games
                 {
                     bool blnSelected = x == currentTile.row && y == currentTile.col;
 
-                    byte bytValue = bytGridValue[x, y];
+                    byte bytValue = tab_gridValues[x, y];
                     string strSymbol = GetTileSymbol(bytValue, blnRevealed[x, y], blnFlagged[x, y]);
 
                     if (!blnRevealed[x, y])
@@ -813,7 +771,7 @@ namespace P_Arcade.Games
                         }
                         else
                             Console.Write("▓▓▓▓▓");
-                    else if (blnRevealed[x, y] && bytGridValue[x, y] == 9 && !blnFlagged[x, y])
+                    else if (blnRevealed[x, y] && tab_gridValues[x, y] == 9 && !blnFlagged[x, y])
                     {
                         Console.BackgroundColor = ConsoleColor.Red;
 

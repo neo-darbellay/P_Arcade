@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 using P_Arcade.Models;
 using P_Arcade.Services;
@@ -12,16 +11,17 @@ namespace P_Arcade.Games
     /// </summary>
     internal class Die
     {
-        private readonly Random _random;
-        private const byte _VAL_MIN = 1;
-        private readonly byte _bytValMax;
+        readonly Random rnd;
+
+        // Constants used for min/max of the dice number
+        const byte VAL_MIN = 1;
+        const byte VAL_MAX = 6;
 
         public byte Value { get; private set; }
 
-        public Die(Random random, byte maxValue)
+        public Die()
         {
-            _random = random;
-            _bytValMax = (byte)(maxValue + 1);
+            rnd = new Random();
             Roll();
         }
 
@@ -30,16 +30,16 @@ namespace P_Arcade.Games
         /// </summary>
         public void Roll()
         {
-            Value = (byte)_random.Next(_VAL_MIN, _bytValMax);
+            Value = (byte)rnd.Next(VAL_MIN, VAL_MAX);
         }
 
         /// <summary>
         /// Draws one horizontal line of the die's box art.
         /// </summary>
-        /// <param name="line">0 = top border, 1 = value row, 2 = bottom border</param>
-        public void Display(byte line)
+        /// <param name="bytLine">0 = top border, 1 = value row, 2 = bottom border</param>
+        public void Display(byte bytLine)
         {
-            switch (line)
+            switch (bytLine)
             {
                 case 0: Console.Write("╔═══╗ "); break;
                 case 1: Console.Write($"║ {Value} ║ "); break;
@@ -59,6 +59,7 @@ namespace P_Arcade.Games
         const byte VAL_MIN_PLAYERS = 2;
         const byte VAL_MAX_PLAYERS = 4;
 
+        // Every categories
         private enum Category
         {
             Ones,
@@ -83,6 +84,7 @@ namespace P_Arcade.Games
             GrandTotal
         }
 
+        // Every playable category
         private static readonly Category[] TBL_PLAYABLE_CATEGORIES =
         {
             Category.Ones,
@@ -91,6 +93,7 @@ namespace P_Arcade.Games
             Category.Fours,
             Category.Fives,
             Category.Sixes,
+
             Category.ThreeOfAKind,
             Category.FourOfAKind,
             Category.FullHouse,
@@ -125,11 +128,10 @@ namespace P_Arcade.Games
         };
 
         // Player states
-        static int[,] tbl_intScores;
+        static sbyte[,] tbl_bytScores;
         static byte bytPlayers;
         static bool blnExitRequested;
         static readonly Die[] tbl_Dice = new Die[5];
-        static readonly Random random = new Random();
 
         public override string[] About()
         {
@@ -181,15 +183,15 @@ namespace P_Arcade.Games
 
             if (blnExitRequested) return;
 
-            tbl_intScores = new int[TBL_CATEGORIES.Length, bytPlayers];
+            tbl_bytScores = new sbyte[TBL_CATEGORIES.Length, bytPlayers];
 
             // Initialise every cell to -1 (distinguishes "not yet scored" from a genuine 0)
             for (int i = 0; i < TBL_CATEGORIES.Length; i++)
                 for (int j = 0; j < bytPlayers; j++)
-                    tbl_intScores[i, j] = -1;
+                    tbl_bytScores[i, j] = -1;
 
-            // 13 rounds, each player takes one turn per round
-            for (int intRound = 0; intRound < 13; intRound++)
+            // Play as many turns as there are playable categories, for every player
+            for (int intRound = 0; intRound < TBL_PLAYABLE_CATEGORIES.Count(); intRound++)
                 for (int intPlayer = 0; intPlayer < bytPlayers; intPlayer++)
                 {
                     PlayTurn(intPlayer, intRound);
@@ -234,25 +236,21 @@ namespace P_Arcade.Games
             Console.WriteLine("   " + strSepLine + "╣");
 
             // Category rows
-            for (int i = 0; i < TBL_CATEGORIES.Length; i++)
+            for (byte i = 0; i < TBL_CATEGORIES.Length; i++)
             {
                 // Add an extra line if we need it
-                if (i == (int)Category.UpperTotal ||
-                    i == (int)Category.ThreeOfAKind ||
-                    i == (int)Category.LowerTotal ||
-                    i == (int)Category.GrandTotal)
-                {
+                if (i == (byte)Category.UpperTotal || i == (byte)Category.ThreeOfAKind || i == (byte)Category.LowerTotal || i == (byte)Category.GrandTotal)
                     Console.WriteLine("   " + strSepLine + "╣");
-                }
+
                 string strRow = $"║ {TBL_CATEGORIES[i], -27} ║";
 
                 for (int j = 0; j < bytPlayers; j++)
                 {
                     string strScore;
                     if (i == (int)Category.Bonus)
-                        strScore = tbl_intScores[i, j] == -1 ? "" : "+ " + tbl_intScores[i, j] + " pts";
+                        strScore = tbl_bytScores[i, j] == -1 ? "" : "+ " + tbl_bytScores[i, j] + " pts";
                     else
-                        strScore = tbl_intScores[i, j] == -1 ? "" : tbl_intScores[i, j] + " pts";
+                        strScore = tbl_bytScores[i, j] == -1 ? "" : tbl_bytScores[i, j] + " pts";
 
                     strRow += $" {strScore, -11} ║";
                 }
@@ -275,8 +273,10 @@ namespace P_Arcade.Games
             for (byte line = 0; line < 3; line++)
             {
                 Console.Write("   ");
+
                 for (int i = 0; i < 5; i++)
                     tbl_Dice[i].Display(line);
+
                 Console.WriteLine();
             }
         }
@@ -284,6 +284,8 @@ namespace P_Arcade.Games
         /// <summary>
         /// Runs a single player's turn
         /// </summary>
+        /// <param name="intPlayer">The current player</param>
+        /// <param name="intRound">The current round</param>
         private void PlayTurn(int intPlayer, int intRound)
         {
             Arcade.ShowTitle(Name);
@@ -292,18 +294,18 @@ namespace P_Arcade.Games
             Console.WriteLine($"\n   Player {intPlayer + 1}'s turn - Round {intRound + 1}");
 
             // Fresh dice each turn
-            for (int i = 0; i < 5; i++)
-                tbl_Dice[i] = new Die(random, 6);
+            for (byte i = 0; i < 5; i++)
+                tbl_Dice[i] = new Die();
 
-            int intRolls = 0;
+            byte bytRolls = 0;
             bool[] tbl_blnKeep = new bool[5];
 
-            while (intRolls < 3)
+            while (bytRolls < 3)
             {
                 // Skip remaining rolls if all dice are held
-                if (tbl_blnKeep.All(k => k)) break;
+                if (tbl_blnKeep.All(blnKeep => blnKeep)) break;
 
-                Console.WriteLine($"\n   Roll #{intRolls + 1}");
+                Console.WriteLine($"\n   Roll #{bytRolls + 1}");
 
                 // Roll only unheld dice
                 for (int i = 0; i < 5; i++)
@@ -313,7 +315,7 @@ namespace P_Arcade.Games
                 ShowDice();
 
                 // No hold prompt after the last roll
-                if (intRolls == 2) break;
+                if (bytRolls == 2) break;
 
                 // Ask which dice to hold
                 string strInput;
@@ -331,7 +333,7 @@ namespace P_Arcade.Games
                 for (int i = 0; i < 5; i++)
                     tbl_blnKeep[i] = strInput[i] == '1';
 
-                intRolls++;
+                bytRolls++;
             }
 
             ChooseCategory(intPlayer);
@@ -340,6 +342,7 @@ namespace P_Arcade.Games
         /// <summary>
         /// Prompts the current player to pick an available scoring category.
         /// </summary>
+        /// <param name="intPlayer">The current player</param>
         private static void ChooseCategory(int intPlayer)
         {
             int intChosenCategory;
@@ -352,7 +355,7 @@ namespace P_Arcade.Games
                 {
                     Category selectedCategory = TBL_PLAYABLE_CATEGORIES[i];
 
-                    int intScore = tbl_intScores[(int)selectedCategory, intPlayer];
+                    int intScore = tbl_bytScores[(int)selectedCategory, intPlayer];
                     string strDisplayScore = intScore != -1 ? $"({intScore})" : "";
 
                     Console.ForegroundColor = ConsoleColor.Green;
@@ -377,8 +380,7 @@ namespace P_Arcade.Games
                     continue;
                 }
 
-                if (intChosenCategory < 1 ||
-                    intChosenCategory > TBL_PLAYABLE_CATEGORIES.Length)
+                if (intChosenCategory < 1 || intChosenCategory > TBL_PLAYABLE_CATEGORIES.Length)
                 {
                     Console.WriteLine("   That category does not exist. Try again.");
                     intChosenCategory = -1;
@@ -387,7 +389,7 @@ namespace P_Arcade.Games
 
                 Category category = TBL_PLAYABLE_CATEGORIES[intChosenCategory - 1];
 
-                if (tbl_intScores[(int)category, intPlayer] != -1)
+                if (tbl_bytScores[(int)category, intPlayer] != -1)
                 {
                     Console.WriteLine("   That category is already filled. Try again.");
                     intChosenCategory = -1;
@@ -397,38 +399,40 @@ namespace P_Arcade.Games
 
             Category chosenCategory = TBL_PLAYABLE_CATEGORIES[intChosenCategory - 1];
 
-            tbl_intScores[(int)chosenCategory, intPlayer] =
-                CalculateScore((int)chosenCategory);
+            tbl_bytScores[(byte)chosenCategory, intPlayer] = (sbyte)CalculateScore((byte)chosenCategory);
         }
 
         /// <summary>
         /// Returns true if the given dice values contain a small straight (any 4 consecutive values)
         /// </summary>
-        private static bool HasSmallStraight(int[] diceValues)
+        /// <param name="tab_intDiceValues">The dices' values</param>
+        private static bool HasSmallStraight(int[] tab_intDiceValues)
         {
-            string strValues = string.Join("", diceValues.Distinct().OrderBy(x => x));
+            string strValues = string.Join("", tab_intDiceValues.Distinct().OrderBy(x => x));
             return strValues.Contains("1234") || strValues.Contains("2345") || strValues.Contains("3456");
         }
 
         /// <summary>
         /// Returns true if the given dice values form a large straight (any 5 consecutive values)
         /// </summary>
-        private static bool HasLargeStraight(int[] diceValues)
+        /// <param name="tab_intDiceValues">The dices' values</param>
+        private static bool HasLargeStraight(int[] tab_intDiceValues)
         {
-            string strValues = string.Join("", diceValues.Distinct().OrderBy(x => x));
+            string strValues = string.Join("", tab_intDiceValues.Distinct().OrderBy(x => x));
             return strValues.Contains("12345") || strValues.Contains("23456");
         }
 
         /// <summary>
         /// Calculates the score for the given category index based on the current dice
         /// </summary>
-        private static int CalculateScore(int intCategory)
+        private static int CalculateScore(byte bytCategory)
         {
+            // We use int here instead of byte, as (byte[]).Sum() doesn't seem to work, as it appears as an error
             int[] tbl_intDiceValues = tbl_Dice.Select(d => (int)d.Value).ToArray();
             int intSum = tbl_intDiceValues.Sum();
-            var groups = tbl_intDiceValues.GroupBy(x => x).OrderByDescending(g => g.Count()).ToArray();
+            IGrouping<int, int>[] groups = tbl_intDiceValues.GroupBy(x => x).OrderByDescending(g => g.Count()).ToArray();
 
-            switch (intCategory)
+            switch (bytCategory)
             {
                 case 0: return tbl_intDiceValues.Where(d => d == 1).Sum();
                 case 1: return tbl_intDiceValues.Where(d => d == 2).Sum();
@@ -454,20 +458,20 @@ namespace P_Arcade.Games
         {
             for (int intPlayer = 0; intPlayer < bytPlayers; intPlayer++)
             {
-                int intUpperTotal = 0;
-                int intLowerTotal = 0;
+                sbyte bytUpperTotal = 0;
+                sbyte bytLowerTotal = 0;
 
                 for (int i = 0; i <= 5; i++)
-                    intUpperTotal += tbl_intScores[i, intPlayer];
+                    bytUpperTotal += tbl_bytScores[i, intPlayer];
 
-                tbl_intScores[6, intPlayer] = intUpperTotal;
-                tbl_intScores[7, intPlayer] = intUpperTotal >= 15 ? 25 : 0;
+                tbl_bytScores[6, intPlayer] = bytUpperTotal;
+                tbl_bytScores[7, intPlayer] = (sbyte)(bytUpperTotal >= 15 ? 25 : 0);
 
                 for (int i = 8; i <= 14; i++)
-                    intLowerTotal += tbl_intScores[i, intPlayer];
+                    bytLowerTotal += tbl_bytScores[i, intPlayer];
 
-                tbl_intScores[15, intPlayer] = intLowerTotal;
-                tbl_intScores[16, intPlayer] = intUpperTotal + tbl_intScores[7, intPlayer] + intLowerTotal;
+                tbl_bytScores[15, intPlayer] = bytLowerTotal;
+                tbl_bytScores[16, intPlayer] = (sbyte)(bytUpperTotal + tbl_bytScores[7, intPlayer] + bytLowerTotal);
             }
         }
 
@@ -476,32 +480,30 @@ namespace P_Arcade.Games
         /// </summary>
         private static void DisplayWinner()
         {
-            int intBestPlayer = 0;
-            int intBestScore = 0;
+            byte bytBestPlayer = 0;
+            sbyte bytBestScore = 0;
             bool blnTie = false;
 
-            for (int intPlayer = 0; intPlayer < bytPlayers; intPlayer++)
+            for (byte bytPlayer = 0; bytPlayer < bytPlayers; bytPlayer++)
             {
-                int intScore = tbl_intScores[16, intPlayer];
+                sbyte bytScore = tbl_bytScores[16, bytPlayer];
 
-                if (intScore > intBestScore)
+                if (bytScore > bytBestScore)
                 {
-                    intBestPlayer = intPlayer;
-                    intBestScore = intScore;
+                    bytBestPlayer = bytPlayer;
+                    bytBestScore = bytScore;
                     blnTie = false;
                 }
-                else if (intScore == intBestScore)
+                else if (bytScore == bytBestScore)
                 {
                     blnTie = true;
                 }
             }
 
             if (!blnTie)
-                Console.WriteLine($"\n\n   Player {intBestPlayer + 1} wins with {intBestScore} points!");
+                Console.WriteLine($"\n\n   Player {bytBestPlayer + 1} wins with {bytBestScore} points!");
             else
                 Console.WriteLine("\n\n   It's a tie! No winner this time.");
-
-            Console.WriteLine("\n   Press any key to continue");
         }
 
 

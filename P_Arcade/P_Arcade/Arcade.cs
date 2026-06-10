@@ -139,6 +139,9 @@ namespace P_Arcade
             Console.WriteLine("   ║    " + CenterText(strTitle, intInnerWidth) + "    ║");
             Console.WriteLine("   ║    " + CenterText(strByLine, intInnerWidth) + "    ║");
             Console.WriteLine("   " + strBottom + "\n");
+
+            // Change the console's title as well
+            Console.Title = strTitle;
         }
 
         /// <summary>
