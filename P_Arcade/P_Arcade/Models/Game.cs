@@ -53,6 +53,8 @@ namespace P_Arcade.Models
                 CurrentScore = 0;
 
             Console.WriteLine("   Hello, World!");
+            Console.WriteLine("   If everything works properly, this text should never appear!");
+
             Console.ReadKey(true);
         }
 

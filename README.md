@@ -2,58 +2,72 @@
 
 ## Overview
 
-**P_Arcade** is a C# console application that lets you play multiple games inside a single interface.
-It includes navigation menus, high‑score tracking, and an easy‑to-use launcher, all running directly in the terminal.
+P_Arcade is a C# console application that bundles multiple games into a single terminal interface.
+It includes an interactive selection menu, per-game option screens, an about section for each game, and a high score system for supported titles.
 
 ---
 
-## Features
+## Games
 
-- **Multiple built‑in games**
-- **High score system** for supported games
-- **Persistent score saving** using XML files
-  - Saved in the same folder as the executable with the name `GAMENAME_highscores.xml`
-- Console‑based UI with keyboard navigation
+| Game           | About section | High Scores |
+| -------------- | ------------- | ----------- |
+| 2048           | Yes           | Yes         |
+| Connect 4      | Yes           | No          |
+| Copy A Drawing | Yes           | No          |
+| MineSweeper    | Yes           | No          |
+| Simon          | Yes           | Yes         |
+| Sliding Puzzle | Yes           | No          |
+| Snake          | Yes           | Yes         |
+| Tic Tac Toe    | Yes           | No          |
+| Yahtzee        | Yes           | No          |
 
 ---
 
 ## Getting Started
 
-### Install Requirements
+### Requirements
 
-You’ll need **Visual Studio** with the _.NET Desktop Development_ workload installed.
+- **Visual Studio** with the **.NET Desktop Development** workload installed
+- A computer running **Windows 11** (support for Windows 10 is not guaranteed)
 
-### Open the Project
+### Setup
 
-- Navigate to the `P_Arcade` folder
-- Open the solution file: `P_Arcade.sln`
+1. Open the `P_Arcade` folder
+2. Open the solution file: `P_Arcade.sln`
+3. Press **Ctrl + F5** to build and launch the application
 
-### Run the Program
-
-Press **Ctrl + F5** in Visual Studio.
-
-This builds and launches the application.
-The executable can also be found here: `P_Arcade/bin/Debug`
+The compiled executable can be found at `P_Arcade/bin/Debug` after building.
 
 ---
 
-## How to Use
+## Navigation
 
-### Menu Navigation
+### Main Menu
 
-- Use **Up / Down Arrow Keys** to browse games
-- Press **Enter** to launch the selected game
+- **Up / Down Arrow Keys** to move between options
+- **Number Keys** to jump directly to a numbered option
+- **Enter** or **Spacebar** to confirm a selection
+- **Escape** to go back or exit
 
-### Option Selection
+### In-Game
 
-- Every menu allows selecting items by pressing the corresponding **number key**, seen on the left of the item
+- Most games use **Arrow Keys** or **WASD** for movement
+- **Escape** exits back to the menu from any game or setup screen
+- Each game's About section lists its specific controls and other information about them
+
+---
+
+## High Scores
+
+Games that support high scores save them locally as XML files in the same folder as the executable, using the naming format `GAMENAME_highscores.xml`.
+
+Scores are saved automatically after each run and persist between sessions.
 
 ---
 
 ## Notes
 
-- All scores are stored locally
-- Each game can have its own separate score file if it supports high scores
-- The application runs entirely in the windows console, without the use of external libraries
-
----
+- P_Arcade runs entirely in the Windows console with no external dependencies
+- Some games automatically adjust the terminal zoom level if the board is too large to fit on screen
+- Yahtzee supports 2 to 4 players on the same machine
+- Connect 4 includes a bot opponent with 10 difficulty levels

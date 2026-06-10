@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 using P_Arcade.Models;
 using P_Arcade.Services;
@@ -53,8 +52,11 @@ namespace P_Arcade.Games
         static byte bytCursorPosX = 0;
 
         // The first tile's X and Y position
-        const byte FIRST_TILE_X = 5;
-        const byte FIRST_TILE_Y = 6;
+        const byte VAL_FIRST_TILE_X = 5;
+        const byte VAL_FIRST_TILE_Y = 6;
+
+        // Whether or not the player wants to quit the game
+        static bool blnExitRequested;
 
         /// <summary>
         /// A counter used to keep track of how many pieces have been placed during the game
@@ -83,7 +85,11 @@ namespace P_Arcade.Games
 
         public override void Start()
         {
+            blnExitRequested = false;
+
             GetUserInput();
+
+            if (blnExitRequested) return;
 
             // Clear the screen and add the title back
             Arcade.ShowTitle(Name);
@@ -196,8 +202,10 @@ namespace P_Arcade.Games
                     case 1:
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write("\t        Player 1: █");
+
                         Console.ForegroundColor = blnTwoPlayers ? ConsoleColor.Yellow : ConsoleColor.Cyan;
                         Console.Write("\tPlayer 2: █");
+
                         Console.ResetColor();
                         break;
 
@@ -206,6 +214,7 @@ namespace P_Arcade.Games
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write("\t\t\t\tComputer level");
+
                             Console.ResetColor();
                         }
                         break;
@@ -215,6 +224,7 @@ namespace P_Arcade.Games
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write("\t\t\t\t----------------------");
+
                             Console.ResetColor();
                         }
                         break;
@@ -224,6 +234,7 @@ namespace P_Arcade.Games
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write("\t\t\t\tEasy (1-3)");
+
                             Console.ResetColor();
                         }
                         break;
@@ -233,6 +244,7 @@ namespace P_Arcade.Games
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write("\t\t\t\tMedium (4-6)");
+
                             Console.ResetColor();
                         }
                         break;
@@ -242,6 +254,7 @@ namespace P_Arcade.Games
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write("\t\t\t\tHard (7+)");
+
                             Console.ResetColor();
                         }
                         break;
@@ -251,9 +264,12 @@ namespace P_Arcade.Games
                         {
                             Console.ForegroundColor = ConsoleColor.Cyan;
                             Console.Write("\t\t\t\tCurrent computer level : {0}", bytBotSmartness);
+
                             Console.ResetColor();
                         }
+
                         Console.WriteLine("\n");
+
                         Console.SetCursorPosition(0, bytLastRow - 1);
                         break;
 
@@ -280,11 +296,11 @@ namespace P_Arcade.Games
                 Console.Write("╝");
             }
 
-            // The 2D grid used for the game's logic
-            byte[,] GameGrid = new byte[bytRow, bytColumn];
+            // The bidirectional grid used for the game's logic
+            byte[,] tab_gridValues = new byte[bytRow, bytColumn];
 
             // Put the cursor inside of the navigation grid
-            Console.SetCursorPosition(FIRST_TILE_X, FIRST_TILE_Y);
+            Console.SetCursorPosition(VAL_FIRST_TILE_X, VAL_FIRST_TILE_Y);
             Console.CursorVisible = false;
 
             // Reset variables used for the game
@@ -316,8 +332,6 @@ namespace P_Arcade.Games
                             Console.Write("\n\n\n\n   ");
 
                             Console.ResetColor();
-                            Console.WriteLine("   Press any key to continue.");
-                            Console.ReadKey(true);
                             return;
 
                         case ConsoleKey.A:
@@ -326,21 +340,21 @@ namespace P_Arcade.Games
                             if (bytCursorPosX > 0)
                             {
                                 // Erase previous piece
-                                Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                                Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
                                 Console.Write("  ");
 
                                 // Add new piece to the left
                                 bytCursorPosX--;
-                                Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                                Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
                                 Console.Write("█");
                             }
                             else
                             {
                                 // Move the piece all the way to the right
-                                Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                                Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
                                 Console.Write("  ");
                                 bytCursorPosX = (byte)(bytColumn - 1);
-                                Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                                Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
                                 Console.Write("█");
                             }
                             break;
@@ -351,45 +365,44 @@ namespace P_Arcade.Games
                             if (bytCursorPosX < bytColumn - 1)
                             {
                                 // Erase previous piece
-                                Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                                Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
                                 Console.Write("  ");
 
                                 // Add new piece to the right
                                 bytCursorPosX++;
-                                Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                                Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
                                 Console.Write("█");
                             }
                             else
                             {
                                 // Move the piece all the way to the left
-                                Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                                Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
                                 Console.Write("  ");
+
                                 bytCursorPosX = 0;
-                                Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                                Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
                                 Console.Write("█");
                             }
                             break;
 
-                        // Piece throwing system
                         case ConsoleKey.Spacebar:
                         case ConsoleKey.DownArrow:
                         case ConsoleKey.S:
                         case ConsoleKey.Enter:
                             // Drop the piece in the first empty line
                             for (int i = bytRow - 1; i >= 0; i--)
-                            {
-                                if (GameGrid[i, bytCursorPosX] == 0)
+                                if (tab_gridValues[i, bytCursorPosX] == 0)
                                 {
-                                    GameGrid[i, bytCursorPosX] = bytPlayer;
-                                    Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, 10 + (i * 2));
+                                    tab_gridValues[i, bytCursorPosX] = bytPlayer;
+
+                                    Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, 10 + (i * 2));
                                     Console.Write("█");
 
                                     blnPiecePlaced = true;
                                     break;
                                 }
-                            }
-                            break;
 
+                            break;
                     }
 
                     // Victory check
@@ -397,10 +410,10 @@ namespace P_Arcade.Games
                     {
                         // Increment the piece counter
                         bytCounter++;
-                        if (Check_Victory(GameGrid, bytPlayer))
+                        if (Check_Victory(tab_gridValues, bytPlayer))
                         {
                             Console.SetCursorPosition(0, bytLastRow);
-                            Console.Write("\n\n\n\n");
+                            Console.WriteLine("\n\n\n");
                             Console.ResetColor();
 
                             Console.Write("   Congratulations,  ");
@@ -411,12 +424,12 @@ namespace P_Arcade.Games
 
                             Console.Write(" ! You have won in " + bytCounter + " turns!\n");
                             Console.ResetColor();
-                            Console.WriteLine("   Press any key to continue.");
+
                             Console.ReadKey(true);
                             return;
                         }
 
-                        if (Grid_Full(GameGrid))
+                        if (Grid_Full(tab_gridValues))
                         {
                             Console.SetCursorPosition(0, bytLastRow);
                             Console.WriteLine("\n\n\n");
@@ -424,7 +437,7 @@ namespace P_Arcade.Games
 
                             Console.Write("   It's a tie! The game grid is full.\n\n");
                             Console.ResetColor();
-                            Console.WriteLine("   Press any key to continue.");
+
                             Console.ReadKey(true);
                             return;
                         }
@@ -434,47 +447,48 @@ namespace P_Arcade.Games
 
                         // Update the piece's color
                         Console.ForegroundColor = (bytPlayer == 1 ? ConsoleColor.Red : blnTwoPlayers ? ConsoleColor.Yellow : ConsoleColor.Cyan);
-                        Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+                        
+                        Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
+                        
                         Console.Write("█");
                     }
                 }
                 // Bot's turn
-
                 else
                 {
-                    int chosenCol = GetBestMove(GameGrid);
+                    int intChosenCol = GetBestMove(tab_gridValues);
 
+                    // Drop a piece in the best option
                     for (int i = bytRow - 1; i >= 0; i--)
-                    {
-                        if (GameGrid[i, chosenCol] == 0)
+                        if (tab_gridValues[i, intChosenCol] == 0)
                         {
-                            GameGrid[i, chosenCol] = 2;
+                            tab_gridValues[i, intChosenCol] = 2;
 
                             Console.ForegroundColor = ConsoleColor.Cyan;
-                            Console.SetCursorPosition(FIRST_TILE_X + chosenCol * 4, 10 + (i * 2));
+                            Console.SetCursorPosition(VAL_FIRST_TILE_X + intChosenCol * 4, 10 + (i * 2));
                             Console.Write("█");
 
                             break;
                         }
-                    }
 
                     bytCounter++;
 
-                    if (Check_Victory(GameGrid, 2))
+                    if (Check_Victory(tab_gridValues, 2))
                     {
                         Console.SetCursorPosition(0, bytLastRow);
                         Console.Write("\n\n\n\n");
                         Console.ResetColor();
 
                         Console.Write("   Computer won in " + bytCounter + " turns!\n");
-                        Console.WriteLine("   Press any key to continue.");
+
                         Console.ReadKey(true);
                         return;
                     }
 
-                    if (Grid_Full(GameGrid))
+                    if (Grid_Full(tab_gridValues))
                     {
                         Console.WriteLine("\n\n   It's a tie!");
+
                         Console.ReadKey(true);
                         return;
                     }
@@ -482,7 +496,9 @@ namespace P_Arcade.Games
                     bytPlayer = 1;
 
                     Console.ForegroundColor = ConsoleColor.Red;
-                    Console.SetCursorPosition(FIRST_TILE_X + bytCursorPosX * 4, FIRST_TILE_Y);
+
+                    Console.SetCursorPosition(VAL_FIRST_TILE_X + bytCursorPosX * 4, VAL_FIRST_TILE_Y);
+ 
                     Console.Write("█");
                 }
             }
@@ -491,121 +507,98 @@ namespace P_Arcade.Games
         /// <summary>
         /// Check to see if either player has won
         /// </summary>
-        /// <param name="GameGrid">The bidirectionnal array that stores all the pieces</param>
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
         /// <returns>Whether or not this player has won</returns>
-        private bool Check_Victory(byte[,] GameGrid, byte bytPlayer)
+        private bool Check_Victory(byte[,] tab_gridValues, byte bytPlayer)
         {
             // Check to see if the current grid size allows a victory
             if (bytRow < 4 || bytColumn < 4)
                 return false;
 
-
-
             // Horizontal verification
             for (byte bytLines = 0; bytLines < bytRow; bytLines++)
-            {
                 for (byte bytColumns = 0; bytColumns <= bytColumn - 4; bytColumns++)
                 {
                     bool blnVictory = true;
 
                     for (int x = 0; x < 4; x++)
-                    {
                         // If a piece isn't the current player's, then that means the line has stopped
-                        if (GameGrid[bytLines, bytColumns + x] != bytPlayer)
+                        if (tab_gridValues[bytLines, bytColumns + x] != bytPlayer)
                         {
                             blnVictory = false;
                             break;
                         }
-                    }
 
                     if (blnVictory) return true;
                 }
-            }
 
             // Vertical verification
             for (byte bytColumns = 0; bytColumns < bytColumn; bytColumns++)
-            {
                 for (byte bytLines = 0; bytLines <= bytRow - 4; bytLines++)
                 {
                     bool blnVictory = true;
 
                     for (int x = 0; x < 4; x++)
-                    {
                         // If a piece isn't the current player's, then that means the line has stopped
-                        if (GameGrid[bytLines + x, bytColumns] != bytPlayer)
+                        if (tab_gridValues[bytLines + x, bytColumns] != bytPlayer)
                         {
                             blnVictory = false;
                             break;
                         }
-                    }
 
                     if (blnVictory) return true;
                 }
-            }
 
             // Diagional verification (\)
             for (byte bytLines = 0; bytLines <= bytRow - 4; bytLines++)
-            {
                 for (byte bytColumns = 0; bytColumns <= bytColumn - 4; bytColumns++)
                 {
                     bool blnVictory = true;
 
                     for (int x = 0; x < 4; x++)
-                    {
                         // If a piece isn't the current player's, then that means the line has stopped
-                        if (GameGrid[bytLines + x, bytColumns + x] != bytPlayer)
+                        if (tab_gridValues[bytLines + x, bytColumns + x] != bytPlayer)
                         {
                             blnVictory = false;
                             break;
                         }
-                    }
 
                     if (blnVictory) return true;
                 }
-            }
 
             // Diagonal verification (/)
             for (byte bytLines = 0; bytLines <= bytRow - 4; bytLines++)
-            {
                 for (byte bytColumns = 3; bytColumns < bytColumn; bytColumns++)
                 {
                     bool blnVictory = true;
 
                     for (int x = 0; x < 4; x++)
-                    {
                         // If a piece isn't the current player's, then that means the line has stopped
-                        if (GameGrid[bytLines + x, bytColumns - x] != bytPlayer)
+                        if (tab_gridValues[bytLines + x, bytColumns - x] != bytPlayer)
                         {
                             blnVictory = false;
                             break;
                         }
-                    }
 
                     if (blnVictory) return true;
                 }
-            }
 
+            // No victory found for the current player
             return false;
         }
 
         /// <summary>
         /// Check to see whether or not the grid is full
         /// </summary>
-        /// <param name="GameGrid">The bidirectionnal array that stores all the pieces</param>
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
         /// <returns>Whether or not the grid is full</returns>
-        private bool Grid_Full(byte[,] GameGrid)
+        private bool Grid_Full(byte[,] tab_gridValues)
         {
             for (byte bytLines = 0; bytLines < bytRow; bytLines++)
-            {
                 for (byte bytColumns = 0; bytColumns < bytColumn; bytColumns++)
-                {
                     // Empty case = not full
-                    if (GameGrid[bytLines, bytColumns] == 0)
-                    {
+                    if (tab_gridValues[bytLines, bytColumns] == 0)
                         return false;
-                    }
-                }
-            }
 
             return true;
         }
@@ -613,59 +606,51 @@ namespace P_Arcade.Games
         /// <summary>
         /// Clones the grid for the bot
         /// </summary>
-        /// <param name="grid"></param>
-        /// <returns></returns>
-        private byte[,] CloneGrid(byte[,] grid)
+        /// <param name="tab_gridValues"></param>
+        private byte[,] CloneGrid(byte[,] tab_gridValues)
         {
             byte[,] newGrid = new byte[bytRow, bytColumn];
-            Array.Copy(grid, newGrid, grid.Length);
+            Array.Copy(tab_gridValues, newGrid, tab_gridValues.Length);
             return newGrid;
         }
 
         /// <summary>
         /// Check for legal moves for the bot
         /// </summary>
-        /// <param name="grid"></param>
-        /// <param name="col"></param>
-        /// <returns></returns>
-        private bool ColumnAvailable(byte[,] grid, int col)
-        {
-            return grid[0, col] == 0;
-        }
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        /// <param name="intCol">The wanted column</param>
+        private bool ColumnAvailable(byte[,] tab_gridValues, int intCol) => tab_gridValues[0, intCol] == 0;
 
         /// <summary>
         /// Drop a piece for the bot
         /// </summary>
-        /// <param name="grid"></param>
-        /// <param name="col"></param>
-        /// <param name="player"></param>
-        private void DropPiece(byte[,] grid, int col, byte player)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        /// <param name="intCol"></param>
+        /// <param name="bytPlayer"></param>
+        private void DropPiece(byte[,] tab_gridValues, int intCol, byte bytPlayer)
         {
             for (int row = bytRow - 1; row >= 0; row--)
-            {
-                if (grid[row, col] == 0)
+                if (tab_gridValues[row, intCol] == 0)
                 {
-                    grid[row, col] = player;
+                    tab_gridValues[row, intCol] = bytPlayer;
                     return;
                 }
-            }
         }
 
         /// <summary>
         /// Evaluate the best move
         /// </summary>
-        /// <param name="grid"></param>
-        /// <returns></returns>
-        private int EvaluatePosition(byte[,] grid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private int EvaluatePosition(byte[,] tab_gridValues)
         {
-            int score = 0;
+            int intScore = 0;
 
             // Helper to evaluate 4-cell windows
-            int EvalWindow(byte[] window)
+            int EvalWindow(byte[] tab_bytWindow)
             {
-                int botPieces = window.Count(x => x == 2);
-                int playerPieces = window.Count(x => x == 1);
-                int empty = window.Count(x => x == 0);
+                int botPieces = tab_bytWindow.Count(x => x == 2);
+                int playerPieces = tab_bytWindow.Count(x => x == 1);
+                int empty = tab_bytWindow.Count(x => x == 0);
 
                 if (botPieces == 4) return 10000;
                 if (botPieces == 3 && empty == 1) return 50;
@@ -678,145 +663,132 @@ namespace P_Arcade.Games
             }
 
             // Horizontal
-            for (int r = 0; r < bytRow; r++)
-            {
-                for (int c = 0; c < bytColumn - 3; c++)
+            for (int intRow = 0; intRow < bytRow; intRow++)
+                for (int intCol = 0; intCol < bytColumn - 3; intCol++)
                 {
-                    byte[] window = { grid[r, c], grid[r, c + 1], grid[r, c + 2], grid[r, c + 3] };
-                    score += EvalWindow(window);
+                    byte[] tab_bytWindow = { tab_gridValues[intRow, intCol], tab_gridValues[intRow, intCol + 1], tab_gridValues[intRow, intCol + 2], tab_gridValues[intRow, intCol + 3] };
+                    intScore += EvalWindow(tab_bytWindow);
                 }
-            }
 
             // Vertical
-            for (int c = 0; c < bytColumn; c++)
-            {
-                for (int r = 0; r < bytRow - 3; r++)
+            for (int intCol = 0; intCol < bytColumn; intCol++)
+                for (int intRow = 0; intRow < bytRow - 3; intRow++)
                 {
-                    byte[] window = { grid[r, c], grid[r + 1, c], grid[r + 2, c], grid[r + 3, c] };
-                    score += EvalWindow(window);
+                    byte[] tab_bytWindow = { tab_gridValues[intRow, intCol], tab_gridValues[intRow + 1, intCol], tab_gridValues[intRow + 2, intCol], tab_gridValues[intRow + 3, intCol] };
+                    intScore += EvalWindow(tab_bytWindow);
                 }
-            }
 
-            // Diagonal \
-            for (int r = 0; r < bytRow - 3; r++)
-            {
+            // Diagonal (\)
+            for (int intRow = 0; intRow < bytRow - 3; intRow++)
                 for (int c = 0; c < bytColumn - 3; c++)
                 {
-                    byte[] window = { grid[r, c], grid[r + 1, c + 1], grid[r + 2, c + 2], grid[r + 3, c + 3] };
-                    score += EvalWindow(window);
+                    byte[] window = { tab_gridValues[intRow, c], tab_gridValues[intRow + 1, c + 1], tab_gridValues[intRow + 2, c + 2], tab_gridValues[intRow + 3, c + 3] };
+                    intScore += EvalWindow(window);
                 }
-            }
 
-            // Diagonal /
-            for (int r = 0; r < bytRow - 3; r++)
-            {
-                for (int c = 3; c < bytColumn; c++)
+            // Diagonal (/)
+            for (int intRow = 0; intRow < bytRow - 3; intRow++)
+                for (int intCol = 3; intCol < bytColumn; intCol++)
                 {
-                    byte[] window = { grid[r, c], grid[r + 1, c - 1], grid[r + 2, c - 2], grid[r + 3, c - 3] };
-                    score += EvalWindow(window);
+                    byte[] window = { tab_gridValues[intRow, intCol], tab_gridValues[intRow + 1, intCol - 1], tab_gridValues[intRow + 2, intCol - 2], tab_gridValues[intRow + 3, intCol - 3] };
+                    intScore += EvalWindow(window);
                 }
-            }
 
-            return score;
+            return intScore;
         }
 
-
-
-        private int MinMax(byte[,] grid, int depth, int alpha, int beta, bool maximizing)
+        /// <summary>
+        /// The MinMax algorythm, used by the bot
+        /// </summary>
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        /// <param name="intDepth">The number of moves remaining to search ahead</param>
+        /// <param name="intAlpha">The best score found so far for the maximizing player</param>
+        /// <param name="intBeta">The best score found so far for the minimizing player</param>
+        /// <param name="blnMaximizing">Indicates whether the current player is maximizing the score</param>
+        private int MinMax(byte[,] tab_gridValues, int intDepth, int intAlpha, int intBeta, bool blnMaximizing)
         {
             byte bytMaxMoves = 7;
 
             // Base cases
 
-            if (depth == 0 ||
-                Check_Victory(grid, 1) ||
-                Check_Victory(grid, 2) ||
-                Grid_Full(grid))
+            if (intDepth == 0 || Check_Victory(tab_gridValues, 1) || Check_Victory(tab_gridValues, 2) || Grid_Full(tab_gridValues))
+                return EvaluatePosition(tab_gridValues);
+
+            if (blnMaximizing)
             {
-                return EvaluatePosition(grid);
-            }
+                int intMaxEval = int.MinValue;
 
+                List<int> lst_intMoves = Enumerable.Range(0, bytColumn).Where(c => ColumnAvailable(tab_gridValues, c)).OrderBy(c => Math.Abs(c - bytColumn / 2)).Take(bytMaxMoves).ToList();
 
-            if (maximizing)
-            {
-                int maxEval = int.MinValue;
-
-
-                List<int> moves = Enumerable.Range(0, bytColumn)
-                                             .Where(c => ColumnAvailable(grid, c))
-                                             .OrderBy(c => Math.Abs(c - bytColumn / 2))
-                                             .Take(bytMaxMoves)
-                                             .ToList();
-
-
-                foreach (int col in moves)
-                {
-                    if (ColumnAvailable(grid, col))
+                foreach (int col in lst_intMoves)
+                    if (ColumnAvailable(tab_gridValues, col))
                     {
-                        var clone = CloneGrid(grid);
-                        DropPiece(clone, col, 2); // bot plays as player 2
-                        int eval = MinMax(clone, depth - 1, alpha, beta, false);
-                        maxEval = Math.Max(maxEval, eval);
-                        alpha = Math.Max(alpha, eval);
-                        if (beta <= alpha) break;
+                        byte[,] tab_gridClone = CloneGrid(tab_gridValues);
+
+                        DropPiece(tab_gridClone, col, 2);
+
+                        int intEval = MinMax(tab_gridClone, intDepth - 1, intAlpha, intBeta, false);
+
+                        intMaxEval = Math.Max(intMaxEval, intEval);
+                        intAlpha = Math.Max(intAlpha, intEval);
+
+                        if (intBeta <= intAlpha) break;
                     }
-                }
-                return maxEval;
+
+                return intMaxEval;
             }
             else
             {
-                int minEval = int.MaxValue;
+                int intMinEval = int.MaxValue;
 
                 for (int col = 0; col < bytColumn; col++)
                 {
-                    if (ColumnAvailable(grid, col))
+                    if (ColumnAvailable(tab_gridValues, col))
                     {
-                        var clone = CloneGrid(grid);
-                        DropPiece(clone, col, 1); // human
-                        int eval = MinMax(clone, depth - 1, alpha, beta, true);
-                        minEval = Math.Min(minEval, eval);
-                        beta = Math.Min(beta, eval);
-                        if (beta <= alpha) break;
+                        byte[,] tab_gridClone = CloneGrid(tab_gridValues);
+
+                        DropPiece(tab_gridClone, col, 1);
+
+                        int eval = MinMax(tab_gridClone, intDepth - 1, intAlpha, intBeta, true);
+
+                        intMinEval = Math.Min(intMinEval, eval);
+                        intBeta = Math.Min(intBeta, eval);
+
+                        if (intBeta <= intAlpha) break;
                     }
                 }
-                return minEval;
+                return intMinEval;
             }
         }
 
         /// <summary>
         /// Get the best move possible
         /// </summary>
-        /// <param name="grid"></param>
-        /// <returns></returns>
-        private int GetBestMove(byte[,] grid)
+        /// <param name="tab_gridValues">The bidirectionnal array that stores all the pieces</param>
+        private int GetBestMove(byte[,] tab_gridValues)
         {
-            int bestScore = int.MinValue;
-            int bestMove = 0;
+            int intBestScore = int.MinValue;
+            int intBestMove = 0;
 
-            int depth =
-                bytColumn > 8 ? 3 :
-                bytBotSmartness <= 3 ? 2 :
-                bytBotSmartness <= 6 ? 4 :
-                                       6;
+            int intDepth = bytColumn > 8 ? 3 : bytBotSmartness <= 3 ? 2 : bytBotSmartness <= 6 ? 4 : 6;
 
-            for (int col = 0; col < bytColumn; col++)
-            {
-                if (ColumnAvailable(grid, col))
+            for (int intCol = 0; intCol < bytColumn; intCol++)
+                if (ColumnAvailable(tab_gridValues, intCol))
                 {
-                    var clone = CloneGrid(grid);
-                    DropPiece(clone, col, 2);
+                    byte[,] tab_gridClone = CloneGrid(tab_gridValues);
 
-                    int score = MinMax(clone, depth, int.MinValue, int.MaxValue, false);
+                    DropPiece(tab_gridClone, intCol, 2);
 
-                    if (score > bestScore)
+                    int intScore = MinMax(tab_gridClone, intDepth, int.MinValue, int.MaxValue, false);
+
+                    if (intScore > intBestScore)
                     {
-                        bestScore = score;
-                        bestMove = col;
+                        intBestScore = intScore;
+                        intBestMove = intCol;
                     }
                 }
-            }
 
-            return bestMove;
+            return intBestMove;
         }
 
         /// <summary>
@@ -840,7 +812,10 @@ namespace P_Arcade.Games
             Console.ResetColor();
 
             // Get the correct input
-            InputService.GetInputInBoundaries(out bytRow, VAL_MIN_ROWS, VAL_MAX_ROWS);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytRow, VAL_MIN_ROWS, VAL_MAX_ROWS);
+
+            if (blnExitRequested)
+                return;
 
 
             // Ask the user for the number of columns they want
@@ -857,8 +832,10 @@ namespace P_Arcade.Games
             Console.ResetColor();
 
             // Get the correct input
-            InputService.GetInputInBoundaries(out bytColumn, VAL_MIN_COLUMNS, VAL_MAX_COLUMNS);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytColumn, VAL_MIN_COLUMNS, VAL_MAX_COLUMNS);
 
+            if (blnExitRequested)
+                return;
 
             // Ask the user if they want to play with two players
             bool blnVerification = false;
@@ -869,17 +846,21 @@ namespace P_Arcade.Games
 
                 Console.Write("   Your input: ");
 
-                char.TryParse(Console.ReadLine(), out char chrAnswer);
+                string strAnswer = InputService.ReadLineOrEscape();
 
-                switch (char.ToUpper(chrAnswer))
+                if (strAnswer == null)
+                { 
+                    blnExitRequested = true;
+                    return;
+                }
+
+                switch (char.ToUpper(strAnswer.Length == 1 ? strAnswer[0] : '\0'))
                 {
-                    case 'y':
                     case 'Y':
                         blnTwoPlayers = true;
                         blnVerification = true;
                         break;
 
-                    case 'n':
                     case 'N':
                         blnTwoPlayers = false;
 
@@ -888,13 +869,13 @@ namespace P_Arcade.Games
 
                         blnVerification = true;
                         break;
+
                     default:
                         Console.WriteLine("\n   Wrong character found. Please type Y for yes, or N for no.");
                         break;
                 }
 
                 Arcade.Windows11TerminalFix();
-
             }
 
             // Ask the user for the level of difficulty if they want to play against a bot
@@ -910,15 +891,16 @@ namespace P_Arcade.Games
 
                     Console.Write("   Your input : ");
 
-                    string strConsoleLine = Console.ReadLine();
+                    string strConsoleLine = InputService.ReadLineOrEscape();
 
-                    if (byte.TryParse(strConsoleLine, out bytBotSmartness))
+                    if (strConsoleLine == null)
                     {
-                        if (Enumerable.Range(1, 10).Contains(bytBotSmartness))
-                        {
-                            blnVerification = true;
-                        }
+                        blnExitRequested = true;
+                        return;
                     }
+
+                    if (byte.TryParse(strConsoleLine, out bytBotSmartness) && Enumerable.Range(1, 10).Contains(bytBotSmartness))
+                        blnVerification = true;
 
                     Arcade.Windows11TerminalFix();
                 }

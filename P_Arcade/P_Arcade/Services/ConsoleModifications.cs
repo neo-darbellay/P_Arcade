@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
 namespace P_Arcade.Services
@@ -33,8 +29,6 @@ namespace P_Arcade.Services
 
         // Constants used for console-related modifications
         const int SW_MAXIMIZE = 3;
-        const uint WM_MOUSEWHEEL = 0x020A;
-        const int WHEEL_DELTA = 120;
 
         // Virtual key codes for the zoom shortcuts
         const byte VK_CONTROL = 0x11;
@@ -54,6 +48,9 @@ namespace P_Arcade.Services
             public int Bottom;
         }
 
+        /// <summary>
+        /// Get the IntPtr Handle of the current window
+        /// </summary>
         static IntPtr GetHandle()
         {
             SetForegroundWindow(GetConsoleWindow());
@@ -76,10 +73,10 @@ namespace P_Arcade.Services
             GetWindowRect(consoleWindowHandle, out Rect screenRect);
 
             // Resize and reposition the console window to fill the screen
-            int width = screenRect.Right - screenRect.Left;
-            int height = screenRect.Bottom - screenRect.Top;
+            int intWidth = screenRect.Right - screenRect.Left;
+            int intHeight = screenRect.Bottom - screenRect.Top;
 
-            MoveWindow(consoleWindowHandle, screenRect.Left, screenRect.Top, width, height, true);
+            MoveWindow(consoleWindowHandle, screenRect.Left, screenRect.Top, intWidth, intHeight, true);
         }
 
         /// <summary>

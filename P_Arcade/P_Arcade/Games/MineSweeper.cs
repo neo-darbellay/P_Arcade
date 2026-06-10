@@ -42,6 +42,9 @@ namespace P_Arcade.Games
         static byte bytWidth = 0;
         static byte bytDifficulty = 0;
 
+        // Whether or not the player wants to quit the game
+        static bool blnExitRequested;
+
         public override string[] About()
         {
             string[] tab_strAbout = new string[]
@@ -77,8 +80,12 @@ namespace P_Arcade.Games
 
         public override void Start()
         {
+            blnExitRequested = false;
+
             // Get user-related values
             GetUserInput();
+
+            if (blnExitRequested) return;
 
             int intZoomed = AdjustZoomIfNeeded();
 
@@ -144,7 +151,6 @@ namespace P_Arcade.Games
                     bool blnHasRevealedNeighbour = false;
 
                     for (int dx = -1; dx <= 1 && !blnHasRevealedNeighbour; dx++)
-                    {
                         for (int dy = -1; dy <= 1 && !blnHasRevealedNeighbour; dy++)
                         {
                             if (dx == 0 && dy == 0)
@@ -153,14 +159,9 @@ namespace P_Arcade.Games
                             int nx = currentTile.row + dx;
                             int ny = currentTile.col + dy;
 
-                            if (nx >= 0 && nx < blnRevealed.GetLength(0) &&
-                                ny >= 0 && ny < blnRevealed.GetLength(1) &&
-                                blnRevealed[nx, ny])
-                            {
+                            if (nx >= 0 && nx < blnRevealed.GetLength(0) && ny >= 0 && ny < blnRevealed.GetLength(1) && blnRevealed[nx, ny])
                                 blnHasRevealedNeighbour = true;
-                            }
                         }
-                    }
 
                     if (blnHasRevealedNeighbour)
                         blnFlagged[currentTile.row, currentTile.col] = !blnFlagged[currentTile.row, currentTile.col];
@@ -206,7 +207,6 @@ namespace P_Arcade.Games
         /// Converts milliseconds into a readable duration string
         /// </summary>
         /// <param name="lngMiliseconds">The duration in milliseconds</param>
-        /// <returns></returns>
         public static string FormatMilliseconds(long lngMiliseconds)
         {
             if (lngMiliseconds < 0)
@@ -237,7 +237,6 @@ namespace P_Arcade.Games
         /// <param name="bytGridValue">The grid itself, containing every value</param>
         /// <param name="blnRevealed">The grid used to know whether or not a tile has been revealed</param>
         /// <param name="blnFlagged"> The grid used to know whether or not a tile has been flagged</param>
-        /// <returns></returns>
         private static void CheckWin(byte[,] bytGridValue, bool[,] blnRevealed, bool[,] blnFlagged)
         {
             blnWon = false;
@@ -545,7 +544,6 @@ namespace P_Arcade.Games
         /// <summary>
         /// Generate the grid by placing mines randomly, then computing adjacency counts for all other tiles.
         /// </summary>
-        /// <returns></returns>
         private static (byte[,] bytGrid, bool[,] blnRevealed, bool[,] blnFlagged) GenerateGrid()
         {
             Random rnd = new Random();
@@ -627,7 +625,6 @@ namespace P_Arcade.Games
         /// <param name="bytValue">The current number logically on the tile</param>
         /// <param name="blnRevealed">Whether or not the tile has been revealed</param>
         /// <param name="blnFlagged">Whether or not the tile has a flag</param>
-        /// <returns></returns>
         private static string GetTileSymbol(byte bytValue, bool blnRevealed, bool blnFlagged)
         {
             if (blnFlagged)
@@ -890,8 +887,10 @@ namespace P_Arcade.Games
             Console.ResetColor();
 
             // Get the correct input
-            InputService.GetInputInBoundaries(out bytLength, VAL_MIN_LENGTH, VAL_MAX_LENGTH);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytLength, VAL_MIN_LENGTH, VAL_MAX_LENGTH);
 
+            if (blnExitRequested)
+                return;
 
             // Ask the user for the number of columns they want
             Console.Write("\n   Please enter the width of the board that you want.\n   The value needs to be greater than ");
@@ -907,8 +906,10 @@ namespace P_Arcade.Games
             Console.ResetColor();
 
             // Get the correct input
-            InputService.GetInputInBoundaries(out bytWidth, VAL_MIN_WIDTH, VAL_MAX_WIDTH);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytWidth, VAL_MIN_WIDTH, VAL_MAX_WIDTH);
 
+            if (blnExitRequested)
+                return;
 
             // Ask the user for the difficulty they want
             Console.Write("\n   Please enter the difficulty you want.\n   The value needs to be greater than ");
@@ -924,7 +925,10 @@ namespace P_Arcade.Games
             Console.ResetColor();
 
             // Get the correct input
-            InputService.GetInputInBoundaries(out bytDifficulty, VAL_MIN_DIFFICULTY, VAL_MAX_DIFFICULTY);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytDifficulty, VAL_MIN_DIFFICULTY, VAL_MAX_DIFFICULTY);
+
+            if (blnExitRequested)
+                return;
         }
     }
 }

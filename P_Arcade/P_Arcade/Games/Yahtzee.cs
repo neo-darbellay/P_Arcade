@@ -127,6 +127,7 @@ namespace P_Arcade.Games
         // Player states
         static int[,] tbl_intScores;
         static byte bytPlayers;
+        static bool blnExitRequested;
         static readonly Die[] tbl_Dice = new Die[5];
         static readonly Random random = new Random();
 
@@ -174,7 +175,11 @@ namespace P_Arcade.Games
 
         public override void Start()
         {
+            blnExitRequested = false;
+
             GetUserInput();
+
+            if (blnExitRequested) return;
 
             tbl_intScores = new int[TBL_CATEGORIES.Length, bytPlayers];
 
@@ -186,7 +191,12 @@ namespace P_Arcade.Games
             // 13 rounds, each player takes one turn per round
             for (int intRound = 0; intRound < 13; intRound++)
                 for (int intPlayer = 0; intPlayer < bytPlayers; intPlayer++)
+                {
                     PlayTurn(intPlayer, intRound);
+
+                    // Quit the game if the player requested to stop
+                    if (blnExitRequested) return;
+                }
 
             // Final scoring and display
             CalculateFinalScores();
@@ -274,9 +284,9 @@ namespace P_Arcade.Games
         /// <summary>
         /// Runs a single player's turn
         /// </summary>
-        private static void PlayTurn(int intPlayer, int intRound)
+        private void PlayTurn(int intPlayer, int intRound)
         {
-            Arcade.ShowTitle("Yahtzee");
+            Arcade.ShowTitle(Name);
             ShowGrid();
 
             Console.WriteLine($"\n   Player {intPlayer + 1}'s turn - Round {intRound + 1}");
@@ -311,8 +321,10 @@ namespace P_Arcade.Games
                 do
                 {
                     Console.Write("\n   Enter 5 digits (1 = keep, 0 = reroll), e.g. 10101\n   ");
-                    strInput = Console.ReadLine() ?? "";
+                    strInput = InputService.ReadLineOrEscape();
                     Console.WriteLine();
+
+                    if (strInput == null) { blnExitRequested = true; return; }
                 }
                 while (strInput.Length != 5);
 
@@ -347,16 +359,16 @@ namespace P_Arcade.Games
                     Console.Write($"   {i + 1 + ".",-4}");
                     Console.ResetColor();
 
-                    Console.WriteLine(
-                        string.Format(
-                            "{0,-24}{1,4}",
-                            TBL_CATEGORIES[(int)selectedCategory],
-                            strDisplayScore));
+                    Console.WriteLine(string.Format("{0,-24}{1,4}", TBL_CATEGORIES[(int)selectedCategory], strDisplayScore));
                 }
 
                 Console.Write("\n   Category number: ");
 
-                bool blnValid = int.TryParse(Console.ReadLine(), out intChosenCategory);
+                string strLine = InputService.ReadLineOrEscape();
+
+                if (strLine == null) { blnExitRequested = true; return; }
+
+                bool blnValid = int.TryParse(strLine, out intChosenCategory);
 
                 if (!blnValid)
                 {
@@ -512,7 +524,10 @@ namespace P_Arcade.Games
             Console.WriteLine(VAL_MAX_PLAYERS);
             Console.ResetColor();
 
-            InputService.GetInputInBoundaries(out bytPlayers, VAL_MIN_PLAYERS, VAL_MAX_PLAYERS);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytPlayers, VAL_MIN_PLAYERS, VAL_MAX_PLAYERS);
+
+            if (blnExitRequested)
+                return;
         }
 
     }

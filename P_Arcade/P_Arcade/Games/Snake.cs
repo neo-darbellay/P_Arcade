@@ -147,7 +147,7 @@ namespace P_Arcade.Games
 
             if (blnBorderCollision)
             {
-                if (SnakeGame.DoesBorderKill)
+                if (SnakeGame.blnBorderKills)
                 {
                     return false;
                 }
@@ -236,7 +236,7 @@ namespace P_Arcade.Games
         public static byte TotalApples;
 
         // Whether or not the borders kill you
-        public static bool DoesBorderKill;
+        public static bool blnBorderKills;
 
         // The game's current speed
         public static byte bytGameSpeed;
@@ -248,6 +248,9 @@ namespace P_Arcade.Games
 
         private static readonly ConsoleColor PrimaryBackgroundColor = ConsoleColor.Gray;
         private static readonly ConsoleColor SecondaryBackgroundColor = ConsoleColor.White;
+
+        // Whether or not the player wants to quit the game
+        static bool blnExitRequested;
 
         public override string[] About()
         {
@@ -291,10 +294,13 @@ namespace P_Arcade.Games
 
         public override void Start()
         {
+            blnExitRequested = false;
             CurrentScore = 0;
 
             // Get user-related values
             GetUserInput();
+
+            if (blnExitRequested) return;
 
             int intZoomed = AdjustZoomIfNeeded();
 
@@ -421,6 +427,9 @@ namespace P_Arcade.Games
                 }
             }
 
+            // Reset the zoom
+            Zoom(intZoomed);
+
             if (SupportsHighscore)
             {
                 Console.Clear();
@@ -439,9 +448,6 @@ namespace P_Arcade.Games
 
                 Arcade.SetHighScoresToFile(this);
             }
-
-            // Reset the zoom
-            Zoom(intZoomed);
         }
 
         /// <summary>
@@ -472,101 +478,6 @@ namespace P_Arcade.Games
             }
 
             return intZoomed;
-        }
-
-        /// <summary>
-        /// Getting the user input
-        /// </summary>
-        private void GetUserInput()
-        {
-            Arcade.ShowTitle(Name);
-
-            // Ask the user for the number of rows they want
-            Console.Write("   Please enter the length of the area that you want.\n   The value needs to be greater than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(VAL_MIN_LENGTH);
-            Console.ResetColor();
-
-            Console.Write(" and smaller than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(VAL_MAX_LENGTH);
-            Console.ResetColor();
-
-            // Get the correct input
-            InputService.GetInputInBoundaries(out bytLength, VAL_MIN_LENGTH, VAL_MAX_LENGTH);
-
-
-            // Ask the user for the number of columns they want
-            Console.Write("\n   Please enter the width of the area that you want.\n   The value needs to be greater than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(VAL_MIN_WIDTH);
-            Console.ResetColor();
-
-            Console.Write(" and smaller than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(VAL_MAX_WIDTH);
-            Console.ResetColor();
-
-            // Get the correct input
-            InputService.GetInputInBoundaries(out bytWidth, VAL_MIN_WIDTH, VAL_MAX_WIDTH);
-
-
-            // Ask the user for the number of apples they want
-            Console.Write("\n   Please enter the amount of apples that you want on screen at once.\n   The value needs to be greater than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(VAL_MIN_APPLES);
-            Console.ResetColor();
-
-            Console.Write(" and smaller than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(VAL_MAX_APPLES);
-            Console.ResetColor();
-
-            // Get the correct input
-            InputService.GetInputInBoundaries(out TotalApples, VAL_MIN_APPLES, VAL_MAX_APPLES);
-
-
-            // Ask the user for the game's speed
-            Console.Write("\n   Please enter how fast you want the game to be.\n   The value needs to be greater than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(VAL_MIN_SPEED);
-            Console.ResetColor();
-
-            Console.Write(" and smaller than ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine(VAL_MAX_SPEED);
-            Console.ResetColor();
-
-            // Get the correct input
-            InputService.GetInputInBoundaries(out bytGameSpeed, VAL_MIN_SPEED, VAL_MAX_SPEED);
-
-
-            // Ask the user whether or not they want the borders to kill the snake or not
-            Console.Write("\n   Should the grid borders kill the snake, or teleport it to the other side?\n   Write ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(0);
-            Console.ResetColor();
-
-            Console.Write(" if it should kill, and ");
-
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.Write(1);
-            Console.ResetColor();
-
-            Console.WriteLine(" if it should teleport the snake to the other side");
-
-            InputService.GetInputInBoundaries(out byte bytBorderKills, 0, 1);
-
-            DoesBorderKill = bytBorderKills == 0;
         }
 
         /// <summary>
@@ -623,6 +534,112 @@ namespace P_Arcade.Games
             DrawTile(intAppleX, intAppleY, '█', ConsoleColor.DarkRed, false);
 
             return true;
+        }
+
+        /// <summary>
+        /// Getting the user input
+        /// </summary>
+        private void GetUserInput()
+        {
+            Arcade.ShowTitle(Name);
+
+            // Ask the user for the number of rows they want
+            Console.Write("   Please enter the length of the area that you want.\n   The value needs to be greater than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(VAL_MIN_LENGTH);
+            Console.ResetColor();
+
+            Console.Write(" and smaller than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(VAL_MAX_LENGTH);
+            Console.ResetColor();
+
+            // Get the correct input
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytLength, VAL_MIN_LENGTH, VAL_MAX_LENGTH);
+
+            if (blnExitRequested)
+                return;
+
+            // Ask the user for the number of columns they want
+            Console.Write("\n   Please enter the width of the area that you want.\n   The value needs to be greater than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(VAL_MIN_WIDTH);
+            Console.ResetColor();
+
+            Console.Write(" and smaller than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(VAL_MAX_WIDTH);
+            Console.ResetColor();
+
+            // Get the correct input
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytWidth, VAL_MIN_WIDTH, VAL_MAX_WIDTH);
+
+            if (blnExitRequested)
+                return;
+
+            // Ask the user for the number of apples they want
+            Console.Write("\n   Please enter the amount of apples that you want on screen at once.\n   The value needs to be greater than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(VAL_MIN_APPLES);
+            Console.ResetColor();
+
+            Console.Write(" and smaller than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(VAL_MAX_APPLES);
+            Console.ResetColor();
+
+            // Get the correct input
+            blnExitRequested = !InputService.GetInputInBoundaries(out TotalApples, VAL_MIN_APPLES, VAL_MAX_APPLES);
+
+            if (blnExitRequested)
+                return;
+
+            // Ask the user for the game's speed
+            Console.Write("\n   Please enter how fast you want the game to be.\n   The value needs to be greater than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(VAL_MIN_SPEED);
+            Console.ResetColor();
+
+            Console.Write(" and smaller than ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(VAL_MAX_SPEED);
+            Console.ResetColor();
+
+            // Get the correct input
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytGameSpeed, VAL_MIN_SPEED, VAL_MAX_SPEED);
+
+            if (blnExitRequested)
+                return;
+
+            // Ask the user whether or not they want the borders to kill the snake or not
+            Console.Write("\n   Should the grid borders kill the snake, or teleport it to the other side?\n   Write ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(0);
+            Console.ResetColor();
+
+            Console.Write(" if it should kill, and ");
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.Write(1);
+            Console.ResetColor();
+
+            Console.WriteLine(" if it should teleport the snake to the other side");
+
+            blnExitRequested = !InputService.GetInputInBoundaries(out byte bytBorderKills, 0, 1);
+
+            if (blnExitRequested)
+                return;
+
+            blnBorderKills = bytBorderKills == 0;
         }
     }
 }

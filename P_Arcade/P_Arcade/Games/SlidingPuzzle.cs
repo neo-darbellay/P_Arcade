@@ -25,6 +25,9 @@ namespace P_Arcade.Games
 
         private static (byte row, byte col) emptyTile;
 
+        // Whether or not the player wants to quit the game
+        static bool blnExitRequested;
+
         public override string[] About()
         {
             string[] tab_strAbout = new string[]
@@ -61,10 +64,13 @@ namespace P_Arcade.Games
 
         public override void Start()
         {
+            blnExitRequested = false;
             intMoves = 0;
 
             // Get user-related values
             GetUserInput();
+
+            if (blnExitRequested) return;
 
             // Generate the grid
             byte[,] bytGrid = CreateAndFillGrid();
@@ -130,7 +136,6 @@ namespace P_Arcade.Games
         /// Check whether the user has won (if the grid is organized)
         /// </summary>
         /// <param name="bytGrid"></param>
-        /// <returns></returns>
         private static bool CheckWin(byte[,] bytGrid)
         {
             byte bytExpectedNumber = 1;
@@ -183,7 +188,6 @@ namespace P_Arcade.Games
         /// <summary>
         /// Create the randomized grid
         /// </summary>
-        /// <returns></returns>
         private static byte[,] CreateAndFillGrid()
         {
             // Initialize the grid with sequential numbers
@@ -328,8 +332,10 @@ namespace P_Arcade.Games
             Console.ResetColor();
 
             // Get the correct input
-            InputService.GetInputInBoundaries(out bytLength, VAL_MIN_LENGTH, VAL_MAX_LENGTH);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytLength, VAL_MIN_LENGTH, VAL_MAX_LENGTH);
 
+            if (blnExitRequested)
+                return;
 
             // Ask the user for the number of columns they want
             Console.Write("\n   Please enter the width of the board that you want.\n   The value needs to be greater than ");
@@ -345,7 +351,10 @@ namespace P_Arcade.Games
             Console.ResetColor();
 
             // Get the correct input
-            InputService.GetInputInBoundaries(out bytWidth, VAL_MIN_WIDTH, VAL_MAX_WIDTH);
+            blnExitRequested = !InputService.GetInputInBoundaries(out bytWidth, VAL_MIN_WIDTH, VAL_MAX_WIDTH);
+
+            if (blnExitRequested)
+                return;
         }
     }
 }

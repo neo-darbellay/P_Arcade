@@ -27,11 +27,17 @@ namespace P_Arcade.Games
         /// </summary>
         public ConsoleKey[] Keys { get; }
 
-        public SimonButton(ConsoleColor activeColor, ConsoleColor inactiveColor, ConsoleKey[] keys)
+        /// <summary>
+        /// The button's beep frequency, used for Console.Beep()
+        /// </summary>
+        public int BeepFrequency { get; }
+
+        public SimonButton(ConsoleColor activeColor, ConsoleColor inactiveColor, ConsoleKey[] keys, int intBeepFrequency)
         {
             ActiveColor = activeColor;
             InactiveColor = inactiveColor;
             Keys = keys;
+            BeepFrequency = intBeepFrequency;
         }
     }
 
@@ -52,6 +58,9 @@ namespace P_Arcade.Games
         // The game's current speed
         private byte _bytGameSpeed = 2;
 
+        // Whether or not the user wanted to exit the game
+        static bool blnExitRequested;
+
         private readonly Random _rng = new Random();
 
         // The current sequence of button indices the player must repeat
@@ -60,13 +69,13 @@ namespace P_Arcade.Games
         // The four Simon buttons
         private static readonly SimonButton[] Buttons = new SimonButton[]
         {
-            new SimonButton(ConsoleColor.Green, ConsoleColor.DarkGreen, new ConsoleKey[] {ConsoleKey.W, ConsoleKey.UpArrow}),
-            new SimonButton(ConsoleColor.Magenta, ConsoleColor.DarkMagenta, new ConsoleKey[] { ConsoleKey.D, ConsoleKey.RightArrow }),
-            new SimonButton(ConsoleColor.Yellow, ConsoleColor.DarkYellow, new ConsoleKey[] { ConsoleKey.S, ConsoleKey.DownArrow }),
-            new SimonButton(ConsoleColor.Blue, ConsoleColor.DarkBlue, new ConsoleKey[] { ConsoleKey.A, ConsoleKey.LeftArrow }),
+            new SimonButton(ConsoleColor.Green,     ConsoleColor.DarkGreen,     new ConsoleKey[] { ConsoleKey.W, ConsoleKey.UpArrow     }, 415),
+            new SimonButton(ConsoleColor.Magenta,   ConsoleColor.DarkMagenta,   new ConsoleKey[] { ConsoleKey.D, ConsoleKey.RightArrow  }, 310),
+            new SimonButton(ConsoleColor.Yellow,    ConsoleColor.DarkYellow,    new ConsoleKey[] { ConsoleKey.S, ConsoleKey.DownArrow   }, 252),
+            new SimonButton(ConsoleColor.Blue,      ConsoleColor.DarkBlue,      new ConsoleKey[] { ConsoleKey.A, ConsoleKey.LeftArrow   }, 209),
 
             // This button is used to show whether or not the player got the answer right
-            new SimonButton(ConsoleColor.Green, ConsoleColor.DarkGray, new ConsoleKey[] { ConsoleKey.A, ConsoleKey.LeftArrow }),
+            new SimonButton(ConsoleColor.Green,     ConsoleColor.DarkGray,      new ConsoleKey[] { ConsoleKey.A, ConsoleKey.LeftArrow   }, 0),
         };
 
         // Board layout
@@ -99,18 +108,6 @@ namespace P_Arcade.Games
 
                 "Your score equals the number of sequences you successfully complete",
                 "Higher game speeds make the flashes appear more quickly",
-
-                "",
-
-                "Controls",
-                "  W / Up Arrow    - Top button",
-                "  D / Right Arrow - Right button",
-                "  S / Down Arrow  - Bottom button",
-                "  A / Left Arrow  - Left button",
-
-                "",
-
-                "Press Q or Escape at any time to quit the current game."
             };
 
             return tab_strAbout;
@@ -118,11 +115,14 @@ namespace P_Arcade.Games
 
         public override  void Start()
         {
+            blnExitRequested = false;
             CurrentScore = 0;
             _lst_sequence = new List<byte>();
 
             // Get user-related values
             GetUserInput();
+
+            if (blnExitRequested) return;
 
             // Clear the screen and add the title back
             Console.Clear();
@@ -161,7 +161,7 @@ namespace P_Arcade.Games
                 bool blnCorrect = GetPlayerInput(out bool blnQuit);
 
                 if (blnQuit)
-                    break;
+                    return;
 
                 if (!blnCorrect)
                 {
@@ -189,12 +189,12 @@ namespace P_Arcade.Games
                 Console.WriteLine($"   Final Score: {CurrentScore}");
                 Console.Write("\n   Enter your name: ");
 
-                string name = Console.ReadLine();
+                string strName = Console.ReadLine();
 
-                if (string.IsNullOrWhiteSpace(name))
-                    name = "Tmp";
+                if (string.IsNullOrWhiteSpace(strName))
+                    strName = "Tmp";
 
-                HighScores.Add(new HighScore(CurrentScore, name));
+                HighScores.Add(new HighScore(CurrentScore, strName));
                 Arcade.SetHighScoresToFile(this);
             }
         }
@@ -317,7 +317,7 @@ namespace P_Arcade.Games
             foreach (byte bytStep in _lst_sequence)
             {
                 DrawButton(bytStep, true);
-                Thread.Sleep(intFlashMs);
+                Console.Beep(Buttons[bytStep].BeepFrequency, intFlashMs);
                 DrawButton(bytStep, false);
                 Thread.Sleep(intGapMs);
             }
@@ -362,7 +362,7 @@ namespace P_Arcade.Games
 
                     // Flash the pressed button
                     DrawButton(bytPressedIndex.Value, true);
-                    Thread.Sleep(150);
+                    Console.Beep(Buttons[bytPressedIndex.Value].BeepFrequency, 150);
                     DrawButton(bytPressedIndex.Value, false);
 
                     if (bytPressedIndex.Value != _lst_sequence[intSequenceIndex])
@@ -413,7 +413,7 @@ namespace P_Arcade.Games
             Console.WriteLine(VAL_MAX_SPEED);
             Console.ResetColor();
 
-            InputService.GetInputInBoundaries(out _bytGameSpeed, VAL_MIN_SPEED, VAL_MAX_SPEED);
+            blnExitRequested = !InputService.GetInputInBoundaries(out _bytGameSpeed, VAL_MIN_SPEED, VAL_MAX_SPEED);
         }
     }
 }

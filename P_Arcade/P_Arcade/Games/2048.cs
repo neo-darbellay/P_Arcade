@@ -12,10 +12,10 @@ namespace P_Arcade.Games
         /// </summary>
         public TwoThousandFourtyEight() : base("2048", true) { }
 
-        private const byte VAL_BOARD_WIDTH = 4;
+        // Dimension-related constants
         private const byte VAL_BOARD_HEIGHT = 4;
-
         private const byte VAL_CELL_HEIGHT = 5;
+        private const byte VAL_BOARD_WIDTH = 4;
         private const byte VAL_CELL_WIDTH = 11;
 
         private static readonly Random rnd = new Random();
@@ -40,7 +40,25 @@ namespace P_Arcade.Games
         {
             string[] tab_strAbout =
             {
-                "TODO"
+                "2048 is a sliding tile puzzle game where the goal is to combine tiles until you reach the 2048 tile",
+                "Each move slides all tiles on the board in a chosen direction at once",
+                "When two tiles with the same number collide, they merge into a single tile with their combined value",
+
+                "",
+
+                "After every valid move, a new tile worth either 2 or 4 is placed on a random empty cell",
+                "The 4 tiles have a 10% chance of spawning",
+                "Planning your moves carefully is important, as the board fills up quickly",
+
+                "",
+
+                "The game ends when no empty cells remain and no adjacent tiles can be merged",
+                "You win by creating a tile with the value 2048, but you can keep playing beyond that for a higher score",
+
+                "",
+
+                "Use the arrow keys or WASD to slide all tiles in the chosen direction",
+                "Press Escape to quit to the menu"
             };
 
             return tab_strAbout;
@@ -78,7 +96,7 @@ namespace P_Arcade.Games
                     ConsoleKey.DownArrow
                 };
 
-                // Validate that the key pressed is valid
+                // Check that the key pressed is valid
                 if (keyPressed == ConsoleKey.Escape)
                     return;
                 else if (tab_validPresses.Contains(keyPressed))
@@ -121,12 +139,12 @@ namespace P_Arcade.Games
                 Console.WriteLine($"   Final Score: {CurrentScore}");
                 Console.Write("\n   Enter your name: ");
 
-                string name = Console.ReadLine();
+                string strName = Console.ReadLine();
 
-                if (string.IsNullOrWhiteSpace(name))
-                    name = "Tmp";
+                if (string.IsNullOrWhiteSpace(strName))
+                    strName = "Tmp";
 
-                HighScores.Add(new HighScore(CurrentScore, name));
+                HighScores.Add(new HighScore(CurrentScore, strName));
 
                 Arcade.SetHighScoresToFile(this);
             }
@@ -136,21 +154,20 @@ namespace P_Arcade.Games
         /// Gets a tile's color
         /// </summary>
         /// <param name="intValue"></param>
-        /// <returns></returns>
         private static ConsoleColor GetTileColor(int intValue)
         {
             if (intValue < 2)
                 return ConsoleColor.DarkGray;
 
-            int index = (int)Math.Log(intValue, 2) - 1;
+            int intIndex = (int)Math.Log(intValue, 2) - 1;
 
-            if (index < 0)
+            if (intIndex < 0)
                 return ConsoleColor.DarkGray;
 
-            if (index >= tab_numberColors.Length)
+            if (intIndex >= tab_numberColors.Length)
                 return tab_numberColors[tab_numberColors.Length - 1];
 
-            return tab_numberColors[index];
+            return tab_numberColors[intIndex];
         }
 
         /// <summary>
@@ -164,31 +181,31 @@ namespace P_Arcade.Games
             int intCenterX = VAL_CELL_WIDTH / 2;
             int intCenterY = VAL_CELL_HEIGHT / 2;
 
-            string[] lines = new string[VAL_CELL_HEIGHT];
+            string[] tab_strLines = new string[VAL_CELL_HEIGHT];
 
             for (int y = 0; y < VAL_CELL_HEIGHT; y++)
             {
-                char[] line = new char[VAL_CELL_WIDTH];
+                char[] tab_chrLine = new char[VAL_CELL_WIDTH];
 
                 for (int x = 0; x < VAL_CELL_WIDTH; x++)
                 {
-                    line[x] = ' ';
+                    tab_chrLine[x] = ' ';
 
                     if (y == intCenterY && strText.Length > 0)
                     {
-                        int start = intCenterX - (strText.Length / 2);
+                        int intStart = intCenterX - (strText.Length / 2);
 
-                        if (x >= start && x < start + strText.Length)
+                        if (x >= intStart && x < intStart + strText.Length)
                         {
-                            line[x] = strText[x - start];
+                            tab_chrLine[x] = strText[x - intStart];
                         }
                     }
                 }
 
-                lines[y] = new string(line);
+                tab_strLines[y] = new string(tab_chrLine);
             }
 
-            return lines;
+            return tab_strLines;
         }
 
         /// <summary>
@@ -204,12 +221,8 @@ namespace P_Arcade.Games
 
             // Get every cell
             for (int intRow = 0; intRow < intRows; intRow++)
-            {
                 for (int intCol = 0; intCol < intCols; intCol++)
-                {
                     tab_renderedCells[intRow * intCols + intCol] = GetCellLines(tab_gridValues[intRow, intCol]);
-                }
-            }
 
             // Draw row by row
             for (int intRow = 0; intRow < intRows; intRow++)
@@ -221,9 +234,8 @@ namespace P_Arcade.Games
                     for (int intColumn = 0; intColumn < intCols; intColumn++)
                     {
                         int intIndex = intRow * intCols + intColumn;
-                        ConsoleColor backgroundColor = GetTileColor(tab_gridValues[intRow, intColumn]);
 
-                        Console.BackgroundColor = backgroundColor;
+                        Console.BackgroundColor = GetTileColor(tab_gridValues[intRow, intColumn]);
                         Console.ForegroundColor = ConsoleColor.Black;
 
                         Console.Write(tab_renderedCells[intIndex][intLine]);
@@ -247,59 +259,49 @@ namespace P_Arcade.Games
         /// <summary>
         /// Calculate the grid's score
         /// </summary>
-        /// <param name="tab_gridValues"></param>
-        /// <returns></returns>
+        /// <param name="tab_gridValues">The grid itself</param>
         private int CalculateGridScore(int[,] tab_gridValues)
         {
-            int score = 0;
+            int intScore = 0;
+
             for (int r = 0; r < VAL_BOARD_HEIGHT; r++)
-            {
                 for (int c = 0; c < VAL_BOARD_WIDTH; c++)
-                {
-                    score += tab_gridValues[r, c];
-                }
-            }
-            return score;
+                    intScore += tab_gridValues[r, c];
+
+            return intScore;
         }
 
         /// <summary>
         /// Check whether or not a grid is impossible
         /// </summary>
         /// <param name="tab_gridValues">The grid itself</param>
-        /// <returns></returns>
         private static bool GridImpossible(int[,] tab_gridValues)
         {
-            int rows = tab_gridValues.GetLength(0);
-            int cols = tab_gridValues.GetLength(1);
+            int intRows = tab_gridValues.GetLength(0);
+            int intCols = tab_gridValues.GetLength(1);
 
-            // 1. Check for empty cells
-            for (int r = 0; r < rows; r++)
-            {
-                for (int c = 0; c < cols; c++)
-                {
+            // Check for empty cells
+            for (int r = 0; r < intRows; r++)
+                for (int c = 0; c < intCols; c++)
                     if (tab_gridValues[r, c] == 0)
                         return false;
-                }
-            }
 
-            // 2. Check for mergeable neighbors
-            for (int r = 0; r < rows; r++)
-            {
-                for (int c = 0; c < cols; c++)
+            // Check for mergeable neighbors
+            for (int r = 0; r < intRows; r++)
+                for (int c = 0; c < intCols; c++)
                 {
-                    int value = tab_gridValues[r, c];
+                    int intValue = tab_gridValues[r, c];
 
                     // Right neighbor
-                    if (c < cols - 1 && tab_gridValues[r, c + 1] == value)
+                    if (c < intCols - 1 && tab_gridValues[r, c + 1] == intValue)
                         return false;
 
                     // Down neighbor
-                    if (r < rows - 1 && tab_gridValues[r + 1, c] == value)
+                    if (r < intRows - 1 && tab_gridValues[r + 1, c] == intValue)
                         return false;
                 }
-            }
 
-            // 3. No moves left
+            // No moves left
             return true;
         }
 
@@ -308,17 +310,13 @@ namespace P_Arcade.Games
         /// </summary>
         /// <param name="tab_gridA"></param>
         /// <param name="tab_gridB"></param>
-        /// <returns></returns>
         private static bool GridsEqual(int[,] tab_gridA, int[,] tab_gridB)
         {
+            // If anything is different, the grids arent equal
             for (int intRow = 0; intRow < tab_gridA.GetLength(0); intRow++)
-            {
                 for (int intCol = 0; intCol < tab_gridA.GetLength(1); intCol++)
-                {
                     if (tab_gridA[intRow, intCol] != tab_gridB[intRow, intCol])
                         return false;
-                }
-            }
 
             return true;
         }
@@ -328,7 +326,6 @@ namespace P_Arcade.Games
         /// </summary>
         /// <param name="tab_gridValues">The grid itself</param>
         /// <param name="strDirection">The direction itself</param>
-        /// <returns></returns>
         private int[,] MoveGrid(int[,] tab_gridValues, string strDirection)
         {
             int intRows = tab_gridValues.GetLength(0);
@@ -362,24 +359,24 @@ namespace P_Arcade.Games
                 }
 
                 // Remove zeroes
-                List<int> values = intLine.Where(x => x != 0).ToList();
+                List<int> lst_intValues = intLine.Where(x => x != 0).ToList();
 
                 // Merge equal neighbours
-                for (int j = 0; j < values.Count - 1; j++)
+                for (int j = 0; j < lst_intValues.Count - 1; j++)
                 {
-                    if (values[j] == values[j + 1])
+                    if (lst_intValues[j] == lst_intValues[j + 1])
                     {
-                        values[j] *= 2;
+                        lst_intValues[j] *= 2;
 
-                        values.RemoveAt(j + 1);
+                        lst_intValues.RemoveAt(j + 1);
                     }
                 }
 
                 // Pad with zeroes
-                while (values.Count < 4)
-                    values.Add(0);
+                while (lst_intValues.Count < 4)
+                    lst_intValues.Add(0);
 
-                intLine = values.ToArray();
+                intLine = lst_intValues.ToArray();
 
                 // Write back
                 for (int j = 0; j < 4; j++)
@@ -412,31 +409,26 @@ namespace P_Arcade.Games
         /// Create a new tile in a random empty space, inside of a grid
         /// </summary>
         /// <param name="tab_gridValues">The grid itself</param>
-        /// <returns></returns>
         private static int[,] CreateNewTile(int[,] tab_gridValues)
         {
             // Collect all empty cells
             List<(int, int)> emptyCells = new List<(int, int)>();
-            for (int r = 0; r < VAL_BOARD_HEIGHT; r++)
-            {
-                for (int c = 0; c < VAL_BOARD_WIDTH; c++)
-                {
-                    if (tab_gridValues[r, c] == 0)
-                        emptyCells.Add((r, c));
-                }
-            }
+            for (int intRow = 0; intRow < VAL_BOARD_HEIGHT; intRow++)
+                for (int intCol = 0; intCol < VAL_BOARD_WIDTH; intCol++)
+                    if (tab_gridValues[intRow, intCol] == 0)
+                        emptyCells.Add((intRow, intCol));
 
             // no space to spawn a new tile
             if (emptyCells.Count == 0)
                 return null;
 
             // Pick a random empty cell
-            (int intRow, int intCol) = emptyCells[rnd.Next(emptyCells.Count)];
+            (int intEmptyRow, int intEmptyCol) = emptyCells[rnd.Next(emptyCells.Count)];
 
             // Spawn a 2 (90%) or 4 (10%) randomly
-            int newValue = rnd.Next(0, 10) == 0 ? 4 : 2;
+            int intNewValue = rnd.Next(0, 10) == 0 ? 4 : 2;
 
-            tab_gridValues[intRow, intCol] = newValue;
+            tab_gridValues[intEmptyRow, intEmptyCol] = intNewValue;
 
             return tab_gridValues;
         }
@@ -444,7 +436,6 @@ namespace P_Arcade.Games
         /// <summary>
         /// Generates the game's grid with two new random tiles inside of it
         /// </summary>
-        /// <returns></returns>
         private static int[,] GenerateGrid()
         {
             int[,] tab_gridValues = new int[VAL_BOARD_HEIGHT, VAL_BOARD_WIDTH];

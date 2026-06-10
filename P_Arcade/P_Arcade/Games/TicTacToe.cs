@@ -187,7 +187,6 @@ namespace P_Arcade.Games
         /// Put a piece down if nothing is there already
         /// </summary>
         /// <param name="bytGrid"></param>
-        /// <returns></returns>
         private static bool SendPiece(byte[,] bytGrid)
         {
             if (bytGrid[bytRow, bytCol] == 0)
@@ -226,7 +225,6 @@ namespace P_Arcade.Games
         /// Checks whether or not the current grid is full
         /// </summary>
         /// <param name="bytGrid"></param>
-        /// <returns></returns>
         private static bool FullGrid(byte[,] bytGrid)
         {
             for (byte x = 0; x < bytGrid.GetLength(0); x++)
@@ -240,7 +238,6 @@ namespace P_Arcade.Games
         /// Check whether the user has won (if there is 3 of a character in a row)
         /// </summary>
         /// <param name="bytGrid"></param>
-        /// <returns></returns>
         private static (bool blnWon, byte bytWinner) CheckWin(byte[,] bytGrid)
         {
             byte bytRepeated;

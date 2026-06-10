@@ -14,11 +14,11 @@ namespace P_Arcade.Models
             Initials = "TMP";
         }
 
-        public HighScore(int score, string name)
+        public HighScore(int intScore, string strName)
         {
-            Score = score;
+            Score = intScore;
 
-            string strTrimmed = (name ?? "Tmp").Trim().ToUpper();
+            string strTrimmed = (strName ?? "Tmp").Trim().ToUpper();
 
             if (strTrimmed.Length >= 3)
                 Initials = strTrimmed.Substring(0, 3);
